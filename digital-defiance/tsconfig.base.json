@@ -1,0 +1,34 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "rootDir": ".",
+    "sourceMap": true,
+    "declaration": false,
+    "moduleResolution": "node",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "es2020",
+    "module": "esnext",
+    "lib": ["es2020", "dom"],
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@digital-defiance/brightchain": ["libs/brightchain/src/index.ts"],
+      "@digital-defiance/brightchain-quorum": [
+        "libs/brightchain-quorum/src/index.ts"
+      ],
+      "@digital-defiance/stargate-256-core": [
+        "libs/stargate-256-core/src/index.ts"
+      ],
+      "@digital-defiance/stargate-n-core": [
+        "libs/stargate-n-core/src/index.ts"
+      ],
+      "@digital-defiance/ts-shamir-tss-gf256": [
+        "libs/ts-shamir-tss-gf256/src/index.ts"
+      ]
+    }
+  },
+  "exclude": ["node_modules", "tmp"]
+}

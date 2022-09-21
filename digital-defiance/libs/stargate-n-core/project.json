@@ -1,0 +1,34 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "libs/stargate-n-core/src",
+  "prefix": "digital-defiance",
+  "targets": {
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/libs/stargate-n-core"],
+      "options": {
+        "jestConfig": "libs/stargate-n-core/jest.config.ts",
+        "passWithNoTests": true
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "libs/stargate-n-core/**/*.ts",
+          "libs/stargate-n-core/**/*.html"
+        ]
+      }
+    },
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "libs/stargate-n-core/src/index.ts",
+        "outputPath": "dist/libs/stargate-n-core",
+        "tsConfig": "libs/stargate-n-core/tsconfig.lib.json"
+      }
+    }
+  },
+  "tags": []
+}

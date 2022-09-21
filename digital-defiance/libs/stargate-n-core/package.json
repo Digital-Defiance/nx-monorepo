@@ -1,0 +1,25 @@
+{
+  "name": "stargate-n-core",
+  "version": "1.0.0",
+  "description": "Core library for Stargate-N",
+  "main": "index.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc -p tsconfig.lib.json"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Digital-Defiance/nx-monorepo.git"
+  },
+  "author": "Digital Defiance, Jessica Mulein",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Digital-Defiance/nx-monorepo/issues"
+  },
+  "homepage": "https://github.com/Digital-Defiance/nx-monorepo#readme",
+  "dependencies": {
+    "@reduxjs/toolkit": "^1.8.5",
+    "quantum-tensors": "^0.4.15",
+    "uuid": "^9.0.0"
+  }
+}

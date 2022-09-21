@@ -1,0 +1,14 @@
+{
+  "$schema": "./node_modules/nx/schemas/workspace-schema.json",
+  "version": 2,
+  "projects": {
+    "brightchain": "libs/brightchain",
+    "brightchain-quorum": "libs/brightchain-quorum",
+    "stargate-256": "apps/stargate-256",
+    "stargate-256-core": "libs/stargate-256-core",
+    "stargate-256-e2e": "apps/stargate-256-e2e",
+    "stargate-n": "apps/stargate-n",
+    "stargate-n-core": "libs/stargate-n-core",
+    "stargate-n-e2e": "apps/stargate-n-e2e"
+  }
+}

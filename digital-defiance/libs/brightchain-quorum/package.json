@@ -1,0 +1,16 @@
+{
+  "name": "@digital-defiance/brightchain-quorum",
+  "version": "0.0.1",
+  "type": "commonjs",
+  "dependencies": {
+    "@types/uuid": "^8.3.4",
+    "bip39": "^3.0.4",
+    "crypto-js": "^4.1.1",
+    "elliptic": "^6.5.4",
+    "secrets.js-34r7h": "^2.0.1",
+    "shamir-bip39": "^0.1.3"
+  },
+  "devDependencies": {
+    "@types/elliptic": "^6.4.14"
+  }
+}
