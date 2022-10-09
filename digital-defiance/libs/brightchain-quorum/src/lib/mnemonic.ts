@@ -4,6 +4,10 @@ import { randomBytes } from 'crypto';
  * The mnemonic has a checksum builtin.
  * This is a non-standard approach.  The standard approach is to use the bip39 library directly. We are only
  * using the wordlists from that library.
+ * It is based loosely on bip39, but with a few differences:
+ * - an additional checksum word is added to the end of the mnemonic phrase
+ * - the checksum word is not part of the seed
+ * - the checksum word is purely for validation purposes
  */
 export default abstract class Mnemonic {
   public static GenerateCheckWord(
@@ -41,7 +45,9 @@ export default abstract class Mnemonic {
     }
 
     // now that we have a list of candidates, take the index modulo the number of candidates
-    const checkWordIndex = Number(addBase % BigInt(dictionarySize) ^ xorBase);
+    const checkWordIndex = Number(
+      (addBase % BigInt(dictionarySize) ^ xorBase) % BigInt(dictionarySize)
+    );
     const checkWord = wordlist[checkWordIndex];
     return checkWord;
   }
@@ -53,23 +59,26 @@ export default abstract class Mnemonic {
     // assumes a filtered dictionary with no duplicates, whitespace, etc.
     const dictionarySize = wordlist.length;
     // number of bits needed to represent the highest index in the dictionary
-    const bitsRequired = Math.ceil(Math.log2(dictionarySize));
-    const totalBits = wordCount * bitsRequired;
+    const bitsPerWord = Math.ceil(Math.log2(dictionarySize));
+    const totalBits = wordCount * bitsPerWord;
     // round up to the nearest multiple of 8 (byte)
     const totalBytes = Math.ceil(totalBits / 8);
     // generate random bytes
     const bytesFromRandom = randomBytes(totalBytes);
-    // convert bytes to bits
+    // convert bytes to bits string ie 1010101110
     const randomBits = Array.from(bytesFromRandom)
       .map((byte) => byte.toString(2).padStart(8, '0'))
       .join('');
+    // trim randomBits back down if needed
+    const trimmedRandomBits = randomBits.slice(0, totalBits);
+
     // create an array of the bit groupings
     const bitGroups: string[] = new Array<string>(wordCount);
     const groupValues: number[] = new Array(wordCount);
     for (let i = 0; i < wordCount; i++) {
-      const start = i * bitsRequired;
-      const end = start + bitsRequired;
-      bitGroups[i] = randomBits.substring(start, end);
+      const start = i * bitsPerWord;
+      const end = start + bitsPerWord;
+      bitGroups[i] = trimmedRandomBits.substring(start, end);
       groupValues[i] = Number('0b' + bitGroups[i]);
     }
     // map the bit groupings to the dictionary
@@ -95,5 +104,64 @@ export default abstract class Mnemonic {
       wordlist
     );
     return actualCheckWord === expectedCheckWordInfo.checkWord;
+  }
+
+  public static MnemonicStringToSeed(
+    phrase: string[],
+    wordlist: string[]
+  ): Buffer {
+    const wordCount = phrase.length;
+    // assumes a filtered dictionary with no duplicates, whitespace, etc.
+    const dictionarySize = wordlist.length;
+    // number of bits needed to represent the highest index in the dictionary
+    const bitsPerWord = Math.ceil(Math.log2(dictionarySize));
+
+    const bitGroups: string[] = new Array<string>(wordCount);
+    const groupValues: number[] = new Array(wordCount);
+    const groupHexValues: string[] = new Array(wordCount);
+    for (let i = 0; i < wordCount; i++) {
+      const wordIndex = wordlist.indexOf(phrase[i]);
+      if (wordIndex < 0) {
+        throw new Error(`Word not found in wordlist: ${phrase[i]}`);
+      }
+      const wordBits = wordIndex.toString(2).padStart(bitsPerWord, '0');
+      bitGroups[i] = wordBits;
+      groupValues[i] = Number('0b' + wordBits);
+      groupHexValues[i] = groupValues[i].toString(16).padStart(2, '0');
+    }
+    return Buffer.from(groupHexValues.join(''), 'hex');
+  }
+
+  public static SeedToMnemonicString(
+    seed: Buffer,
+    wordlist: string[],
+    wordCount = 24
+  ): string[] {
+    // assumes a filtered dictionary with no duplicates, whitespace, etc.
+    const dictionarySize = wordlist.length;
+    // number of bits needed to represent the highest index in the dictionary
+    const bitsPerWord = Math.ceil(Math.log2(dictionarySize));
+    const totalBits = wordCount * bitsPerWord;
+    const totalBytes = Math.ceil(totalBits / 8);
+
+    const binarySeed = new Uint8Array(totalBytes);
+    for (let i = 0; i < seed.length; i++) {
+      binarySeed[i] = seed[i];
+    }
+    const seedBits = Array.from(binarySeed)
+      .map((byte) => byte.toString(2).padStart(8, '0'))
+      .join('');
+
+    const phrase: string[] = new Array<string>(wordCount);
+    // break the seed into groups of bitsRequired (11 for 2048)
+    for (let i = 0; i < wordCount; i++) {
+      const start = i * bitsPerWord;
+      const end = start + bitsPerWord;
+      const chunkBits = seedBits.substring(start, end);
+      const wordIndex = Number('0b' + chunkBits);
+      const word = wordlist[wordIndex];
+      phrase[i] = word;
+    }
+    return phrase;
   }
 }
