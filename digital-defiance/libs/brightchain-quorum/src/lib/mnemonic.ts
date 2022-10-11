@@ -1,4 +1,11 @@
 import { randomBytes } from 'crypto';
+import {
+  randChoice,
+  randomBigint,
+} from '../../../stargate-256-core/src/lib/util';
+import Rand from 'rand-seed';
+import { IMnemonic, IMnemonicEntry } from './interfaces';
+
 /**
  * Class to facilitate the generation of a mnemonic phrase and the conversion of a mnemonic phrase to a seed.
  * The mnemonic has a checksum builtin.
@@ -9,8 +16,8 @@ import { randomBytes } from 'crypto';
  * - the checksum word is not part of the seed
  * - the checksum word is purely for validation purposes
  */
-export default abstract class Mnemonic {
-  public static GenerateCheckWord(
+export default class Mnemonic implements IMnemonic {
+  public GenerateCheckWord(
     phrase: string[],
     wordlist: string[]
   ): string {
@@ -21,12 +28,14 @@ export default abstract class Mnemonic {
     const bitsRequired = Math.ceil(Math.log2(dictionarySize));
     // create an array of the bit groupings
     const bitGroups: string[] = new Array<string>(wordCount);
-    const groupValues: number[] = new Array(wordCount);
+    const groupValues: bigint[] = new Array(wordCount);
 
-    // add every other value
-    // xor every value
-    const addBase = 0n;
-    const xorBase = 0n;
+    // with 11 bits, we can represent 2048 values
+    // pretend this is base 2048
+    // add 2048*
+
+    let addBase = 0n;
+    let xorBase = 0n;
 
     for (let i = 0; i < wordCount; i++) {
       // locate the word in the wordlist
@@ -36,12 +45,11 @@ export default abstract class Mnemonic {
       }
       const wordBits = wordIndex.toString(2).padStart(bitsRequired, '0');
       bitGroups[i] = wordBits;
-      groupValues[i] = Number('0b' + wordBits);
+      groupValues[i] = BigInt('0b' + wordBits);
 
-      if (i % 2 === 0) {
-        addBase + BigInt(groupValues[i]);
-      }
-      xorBase ^ BigInt(groupValues[i]);
+      addBase +=
+        groupValues[i] * (i > 0 ? BigInt(i) ** BigInt(dictionarySize) : 1n);
+      xorBase ^= groupValues[i];
     }
 
     // now that we have a list of candidates, take the index modulo the number of candidates
@@ -52,10 +60,10 @@ export default abstract class Mnemonic {
     return checkWord;
   }
 
-  public static GenerateMnemonicString(
+  public GenerateMnemonicString(
     wordCount = 24,
     wordlist: string[]
-  ): { words: string[]; phrase: string; checkWord: string } {
+  ): IMnemonicEntry {
     // assumes a filtered dictionary with no duplicates, whitespace, etc.
     const dictionarySize = wordlist.length;
     // number of bits needed to represent the highest index in the dictionary
@@ -86,11 +94,11 @@ export default abstract class Mnemonic {
     return {
       words: words,
       phrase: words.join(' '),
-      checkWord: Mnemonic.GenerateCheckWord(words, wordlist),
+      checkWord: this.GenerateCheckWord(words, wordlist),
     };
   }
 
-  public static ValidateMnemonicString(
+  public ValidateMnemonicString(
     phrase: string,
     wordlist: string[]
   ): boolean {
@@ -99,14 +107,14 @@ export default abstract class Mnemonic {
     // set aside the check word
     const actualCheckWord = words.pop();
     // re-generate the check word
-    const expectedCheckWordInfo = Mnemonic.GenerateMnemonicString(
+    const expectedCheckWordInfo = this.GenerateMnemonicString(
       words.length,
       wordlist
     );
     return actualCheckWord === expectedCheckWordInfo.checkWord;
   }
 
-  public static MnemonicStringToSeed(
+  public MnemonicStringToSeed(
     phrase: string[],
     wordlist: string[]
   ): Buffer {
@@ -117,7 +125,7 @@ export default abstract class Mnemonic {
     const bitsPerWord = Math.ceil(Math.log2(dictionarySize));
 
     const bitGroups: string[] = new Array<string>(wordCount);
-    const groupValues: number[] = new Array(wordCount);
+    const groupValues: bigint[] = new Array(wordCount);
     const groupHexValues: string[] = new Array(wordCount);
     for (let i = 0; i < wordCount; i++) {
       const wordIndex = wordlist.indexOf(phrase[i]);
@@ -126,13 +134,13 @@ export default abstract class Mnemonic {
       }
       const wordBits = wordIndex.toString(2).padStart(bitsPerWord, '0');
       bitGroups[i] = wordBits;
-      groupValues[i] = Number('0b' + wordBits);
+      groupValues[i] = BigInt('0b' + wordBits);
       groupHexValues[i] = groupValues[i].toString(16).padStart(2, '0');
     }
     return Buffer.from(groupHexValues.join(''), 'hex');
   }
 
-  public static SeedToMnemonicString(
+  public SeedToMnemonicString(
     seed: Buffer,
     wordlist: string[],
     wordCount = 24
