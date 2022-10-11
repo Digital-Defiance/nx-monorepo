@@ -1,3 +1,9 @@
+export interface IShamirShareDetail {
+  bits: number;
+  id: number;
+  data: string;
+}
+
 export interface IMnemonicEntry {
   words: string[];
   phrase: string;
