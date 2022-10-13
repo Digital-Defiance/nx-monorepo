@@ -1,10 +1,8 @@
 import QuorumMember from './member';
 
 export default class BrightchainQuorum {
-  public readonly name: string;
-  constructor(name: string) {
-    this.name = name;
-  }
+  constructor(public readonly name: string) {}
+
   public async createMember(
     name: string,
     contactEmail: string,

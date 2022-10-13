@@ -22,9 +22,8 @@ export default class Mnemonic implements IMnemonic {
     const wordValues: bigint[] = new Array<bigint>();
     for (const word of words) {
       const index = wordlist.indexOf(word);
-      if (index === -1) {
+      if (index === -1) 
         throw new Error('Invalid mnemonic word');
-      }
       wordValues.push(BigInt(index));
     }
     return wordValues;

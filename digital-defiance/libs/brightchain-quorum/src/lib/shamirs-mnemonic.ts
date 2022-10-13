@@ -6,12 +6,14 @@ export default class ShamirsMnemonic implements IMnemonic {
   private readonly words: Array<string> = [];
   private readonly checkWord: string;
   private readonly dictionaryWords: Array<string> = [];
+  
   constructor(dictionaryWords: Array<string>, wordCount = 24) {
     this.dictionaryWords = dictionaryWords;
     const r = this.GenerateMnemonicString(wordCount, dictionaryWords);
     this.words = r.phrase.split(' ');
     this.checkWord = r.checkWord;
   }
+
   public PhraseToValues(phrase: string, wordlist: string[]): bigint[] {
     const words = phrase.split(' ');
     const wordValues: bigint[] = new Array<bigint>();
