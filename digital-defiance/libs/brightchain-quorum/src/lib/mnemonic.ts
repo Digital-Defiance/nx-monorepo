@@ -151,7 +151,7 @@ export default class Mnemonic implements IMnemonic {
     const totalBits = wordCount * bitsPerWord;
     // round up to the nearest multiple of 8 (byte)
     const totalBytes = Math.ceil(totalBits / 8);
-    const groupValues = this.GenerateNValuesOfYBits(wordCount, bitsPerWord);
+    const groupValues = this.GenerateNValuesOfYBits(wordCount, bitsPerWord, seed.toString('hex'));
     const paddedValues = this.JoinAndPadGeneratedValues(
       groupValues,
       totalBytes * 2,
