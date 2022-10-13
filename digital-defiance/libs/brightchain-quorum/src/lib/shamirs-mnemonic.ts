@@ -1,24 +1,32 @@
-import { IMnemonic, IMnemonicEntry } from './interfaces';
+import { IMnemonic } from './interfaces';
 import { extractShareComponents, random, share } from 'secrets.js-34r7h';
 import ShamirShareDetail from './shamir-share-detail';
 
 export default class ShamirsMnemonic implements IMnemonic {
   private readonly words: Array<string> = [];
+  private readonly checkWord: string;
   private readonly dictionaryWords: Array<string> = [];
   constructor(dictionaryWords: Array<string>, wordCount = 24) {
     this.dictionaryWords = dictionaryWords;
-    this.words = this.GenerateMnemonicString(wordCount, dictionaryWords).words;
+    const r = this.GenerateMnemonicString(wordCount, dictionaryWords);
+    this.words = r.phrase.split(' ');
+    this.checkWord = r.checkWord;
   }
-  public GenerateCheckWord(phrase: string[], wordlist: string[]): string {
+  public GenerateCheckWord(phrase: string, wordlist: string[]): string {
     throw new Error('Method not implemented.');
   }
   public GenerateMnemonicString(
     wordCount = 24,
     wordlist: string[]
-  ): IMnemonicEntry {
+  ): { phrase: string; checkWord: string } {
+    /**
+     * An array of wordCount strings, each of which is a random word from the wordlist.
+     */
     const shareWords: string[] = new Array<string>(wordCount);
+    /**
+     * An array containing the share details for each share word.
+     */
     const shareComponents: ShamirShareDetail[] = new Array(wordCount);
-    const bitGroups: string[] = new Array<string>(wordCount);
 
     // create wordCount shares with a threshold of wordCount.
     // assumes a filtered dictionary with no duplicates, whitespace, etc.
@@ -70,35 +78,32 @@ export default class ShamirsMnemonic implements IMnemonic {
     for (let i = 0; i < wordCount; i++) {
       shareComponents[i] = ShamirShareDetail.fromShare(shares[i]);
     }
-    console.log(shareComponents);
-    // join the groups of 8 bits (represented in hex as 16 characters) from each share and then split into groups of of bitsPerWord
     const joinedDataHex = shareComponents.map((s) => s.data).join(''); // ends up being 3072 bytes
-    console.log(shares, shareComponents, shareWords, joinedDataHex);
-    // joinedBits is a string in hex so the length is 2x the number of bytes, and then 1/8th the number of bits
-    // joinedBits should now have a length of
-    if (
-      joinedDataHex.length !==
-      (totalBitsRequiredToRepresentWordCountAfterPadding / 8) * 2
-    ) {
-      throw new Error(
-        `Joined bits length is ${joinedDataHex.length} but should be ${
-          (totalBitsRequiredToRepresentWordCountAfterPadding / 8) * 2
-        }`
-      );
+    // joinedDataHex is a string in hex so the length is 2x the number of actual bytes
+    // joinedDataHex should now have a length of 3072. 3072/2=1536 bytes. 1536/24=64 bytes per share.
+    // i'm not sure how the shamir math ends up making it 64 bytes.
+    const expectedBytesPerShare = Math.ceil(
+      joinedDataHex.length / (2 * wordCount)
+    ); // 64
+
+    // so now we will walk through the 24 shares and extract the 11 bits needed to represent each word.
+    for (let i=0; i<wordCount; i++) {
+      const shareComponent = shareComponents[i];
+      shareWords[i] = this.dictionaryWords[shareComponent.dictionaryIndex(this.dictionaryWords)]
     }
     throw new Error('not implemented');
   }
   public ValidateMnemonicString(phrase: string, wordlist: string[]): boolean {
     throw new Error('Method not implemented.');
   }
-  public MnemonicStringToSeed(phrase: string[], wordlist: string[]): Buffer {
+  public MnemonicStringToSeed(phrase: string, wordlist: string[]): Buffer {
     throw new Error('Method not implemented.');
   }
   public SeedToMnemonicString(
     seed: Buffer,
     wordlist: string[],
     wordCount = 24
-  ): string[] {
+  ): string {
     throw new Error('Method not implemented.');
   }
 }

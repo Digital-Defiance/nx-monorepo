@@ -4,27 +4,21 @@ export interface IShamirShareDetail {
   data: string;
 }
 
-export interface IMnemonicEntry {
-  words: string[];
-  phrase: string;
-  checkWord: string;
-}
-
 export interface IMnemonic {
-  static GenerateCheckWord(phrase: string[], wordlist: string[]): string;
+  static GenerateCheckWord(phrase: string, wordlist: string[]): string;
 
   static GenerateMnemonicString(
     wordCount = 24,
     wordlist: string[]
-  ): IMnemonicEntry;
+  ): { phrase: string; checkWord: string };
 
   static ValidateMnemonicString(phrase: string, wordlist: string[]): boolean;
 
-  static MnemonicStringToSeed(phrase: string[], wordlist: string[]): Buffer;
+  static MnemonicStringToSeed(phrase: string, wordlist: string[]): Buffer;
 
   static SeedToMnemonicString(
     seed: Buffer,
     wordlist: string[],
     wordCount = 24
-  ): string[];
+  ): string;
 }

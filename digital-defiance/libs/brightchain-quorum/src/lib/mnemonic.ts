@@ -4,7 +4,7 @@ import {
   randomBigint,
 } from '../../../stargate-256-core/src/lib/util';
 import Rand from 'rand-seed';
-import { IMnemonic, IMnemonicEntry } from './interfaces';
+import { IMnemonic } from './interfaces';
 
 /**
  * Class to facilitate the generation of a mnemonic phrase and the conversion of a mnemonic phrase to a seed.
@@ -18,10 +18,11 @@ import { IMnemonic, IMnemonicEntry } from './interfaces';
  */
 export default class Mnemonic implements IMnemonic {
   public GenerateCheckWord(
-    phrase: string[],
+    phrase: string,
     wordlist: string[]
   ): string {
-    const wordCount = phrase.length;
+    const words = phrase.split(' ');
+    const wordCount = words.length;
     // assumes a filtered dictionary with no duplicates, whitespace, etc.
     const dictionarySize = wordlist.length;
     // number of bits needed to represent the highest index in the dictionary
@@ -39,9 +40,9 @@ export default class Mnemonic implements IMnemonic {
 
     for (let i = 0; i < wordCount; i++) {
       // locate the word in the wordlist
-      const wordIndex = wordlist.indexOf(phrase[i]);
+      const wordIndex = wordlist.indexOf(words[i]);
       if (wordIndex < 0) {
-        throw new Error(`Word not found in wordlist: ${phrase[i]}`);
+        throw new Error(`Word not found in wordlist: ${words[i]}`);
       }
       const wordBits = wordIndex.toString(2).padStart(bitsRequired, '0');
       bitGroups[i] = wordBits;
@@ -50,6 +51,10 @@ export default class Mnemonic implements IMnemonic {
       addBase +=
         groupValues[i] * (i > 0 ? BigInt(i) ** BigInt(dictionarySize) : 1n);
       xorBase ^= groupValues[i];
+
+      // addBase += groupValues[i] * (i > 0 ? BigInt(i) ** BigInt(dictionarySize) : 1n);
+      // xorBase ^= groupValues[i];
+      return wordlist[Number(addBase % BigInt(dictionarySize))];
     }
 
     // now that we have a list of candidates, take the index modulo the number of candidates
@@ -63,7 +68,7 @@ export default class Mnemonic implements IMnemonic {
   public GenerateMnemonicString(
     wordCount = 24,
     wordlist: string[]
-  ): IMnemonicEntry {
+  ): { phrase: string; checkWord: string } {
     // assumes a filtered dictionary with no duplicates, whitespace, etc.
     const dictionarySize = wordlist.length;
     // number of bits needed to represent the highest index in the dictionary
@@ -92,9 +97,8 @@ export default class Mnemonic implements IMnemonic {
     // map the bit groupings to the dictionary
     const words = groupValues.map((value) => wordlist[value]);
     return {
-      words: words,
       phrase: words.join(' '),
-      checkWord: this.GenerateCheckWord(words, wordlist),
+      checkWord: this.GenerateCheckWord(words.join(' '), wordlist),
     };
   }
 
@@ -115,10 +119,11 @@ export default class Mnemonic implements IMnemonic {
   }
 
   public MnemonicStringToSeed(
-    phrase: string[],
+    phrase: string,
     wordlist: string[]
   ): Buffer {
-    const wordCount = phrase.length;
+    const words = phrase.split(' ');
+    const wordCount = words.length;
     // assumes a filtered dictionary with no duplicates, whitespace, etc.
     const dictionarySize = wordlist.length;
     // number of bits needed to represent the highest index in the dictionary
@@ -128,9 +133,9 @@ export default class Mnemonic implements IMnemonic {
     const groupValues: bigint[] = new Array(wordCount);
     const groupHexValues: string[] = new Array(wordCount);
     for (let i = 0; i < wordCount; i++) {
-      const wordIndex = wordlist.indexOf(phrase[i]);
+      const wordIndex = wordlist.indexOf(words[i]);
       if (wordIndex < 0) {
-        throw new Error(`Word not found in wordlist: ${phrase[i]}`);
+        throw new Error(`Word not found in wordlist: ${words[i]}`);
       }
       const wordBits = wordIndex.toString(2).padStart(bitsPerWord, '0');
       bitGroups[i] = wordBits;
@@ -144,7 +149,7 @@ export default class Mnemonic implements IMnemonic {
     seed: Buffer,
     wordlist: string[],
     wordCount = 24
-  ): string[] {
+  ): string {
     // assumes a filtered dictionary with no duplicates, whitespace, etc.
     const dictionarySize = wordlist.length;
     // number of bits needed to represent the highest index in the dictionary
@@ -170,6 +175,6 @@ export default class Mnemonic implements IMnemonic {
       const word = wordlist[wordIndex];
       phrase[i] = word;
     }
-    return phrase;
+    return phrase.join(' ');
   }
 }
