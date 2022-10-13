@@ -55,6 +55,29 @@ export default class Mnemonic implements IMnemonic {
     return wordlist[Number(wordIndex)];
   }
 
+  public GenerateNValuesOfYBits(
+    n: number,
+    y: number,
+    seed?: string
+  ): bigint[] {
+    const rand = new Rand(seed);
+    const values: bigint[] = new Array<bigint>(n);
+    const maxValue = BigInt(2) ** BigInt(y + 1) - BigInt(1); // 2^y - 1 eg 2^8 - 1 = 255, 2^11 - 1 = 2047
+    for (let i = 0; i < n; i++) {
+      values[i] = BigInt(Math.floor(rand.next() * Number(maxValue)));
+    }
+    return values;
+  }
+
+  public JoinAndPadGeneratedValues(values: bigint[], expectedLength?: number, radix?: number): string {
+    const defaultRadix = radix ?? 16;
+    const hexValues = values.map((value) => value.toString(defaultRadix).padStart(defaultRadix == 2 ? 8 : 2, '0')).join('');
+    if (expectedLength) {
+      return hexValues.padStart(expectedLength, '0');
+    }
+    return hexValues;
+  }
+
   public GenerateMnemonicString(
     wordCount = 24,
     wordlist: string[]
@@ -66,26 +89,12 @@ export default class Mnemonic implements IMnemonic {
     const totalBits = wordCount * bitsPerWord;
     // round up to the nearest multiple of 8 (byte)
     const totalBytes = Math.ceil(totalBits / 8);
-    // generate random bytes
-    const bytesFromRandom = randomBytes(totalBytes);
-    // convert bytes to bits string ie 1010101110
-    const randomBits = Array.from(bytesFromRandom)
-      .map((byte) => byte.toString(2).padStart(8, '0'))
-      .join('');
-    // trim randomBits back down if needed
-    const trimmedRandomBits = randomBits.slice(0, totalBits);
+    const groupValues = this.GenerateNValuesOfYBits(wordCount, bitsPerWord);
+    const paddedValues = this.JoinAndPadGeneratedValues(groupValues, totalBytes * 2, 16);
+    const groupBytes = Buffer.from(paddedValues, 'hex');
 
-    // create an array of the bit groupings
-    const bitGroups: string[] = new Array<string>(wordCount);
-    const groupValues: number[] = new Array(wordCount);
-    for (let i = 0; i < wordCount; i++) {
-      const start = i * bitsPerWord;
-      const end = start + bitsPerWord;
-      bitGroups[i] = trimmedRandomBits.substring(start, end);
-      groupValues[i] = Number('0b' + bitGroups[i]);
-    }
     // map the bit groupings to the dictionary
-    const words = groupValues.map((value) => wordlist[value]);
+    const words = groupValues.map((value) => wordlist[Number(value)]);
     return {
       phrase: words.join(' '),
       checkWord: this.GenerateCheckWord(words.join(' '), wordlist),
@@ -109,21 +118,8 @@ export default class Mnemonic implements IMnemonic {
     const words = phrase.split(' ');
     const wordCount = words.length;
     const wordValues = this.PhraseToValues(phrase, wordlist);
-    // assumes a filtered dictionary with no duplicates, whitespace, etc.
-    const dictionarySize = wordlist.length;
-    // number of bits needed to represent the highest index in the dictionary
-    const bitsPerWord = Math.ceil(Math.log2(dictionarySize));
-
-    const bitGroups: string[] = new Array<string>(wordCount);
-    const groupValues: bigint[] = new Array(wordCount);
-    const groupHexValues: string[] = new Array(wordCount);
-    for (let i = 0; i < wordCount; i++) {
-      const wordBits = wordValues[i].toString(2).padStart(bitsPerWord, '0');
-      bitGroups[i] = wordBits;
-      groupValues[i] = BigInt('0b' + wordBits);
-      groupHexValues[i] = groupValues[i].toString(16).padStart(2, '0');
-    }
-    return Buffer.from(groupHexValues.join(''), 'hex');
+    const paddedValues = this.JoinAndPadGeneratedValues(wordValues, wordCount * 2, 16);
+    return Buffer.from(paddedValues, 'hex');
   }
 
   public SeedToMnemonicString(
@@ -143,7 +139,7 @@ export default class Mnemonic implements IMnemonic {
       binarySeed[i] = seed[i];
     }
     const seedBits = Array.from(binarySeed)
-      .map((byte) => byte.toString(2).padStart(8, '0'))
+      .map((byte) => byte.toString(2).padStart(bitsPerWord, '0'))
       .join('');
 
     const phrase: string[] = new Array<string>(wordCount);
