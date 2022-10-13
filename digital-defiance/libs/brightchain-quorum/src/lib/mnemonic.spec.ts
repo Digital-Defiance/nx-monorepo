@@ -14,7 +14,6 @@ describe('mnemonic', () => {
     expect(mnemonic).toBeTruthy();
     expect(mnemonic.phrase.split(' ').length).toEqual(wordCount);
     expect(mnemonic.checkWord).toBeTruthy();
-    expect(mnemonic.phrase).toContain(mnemonic.checkWord);
 
     // validate actual check string
     const isValid = mnemonicInstance.ValidateMnemonicString(
