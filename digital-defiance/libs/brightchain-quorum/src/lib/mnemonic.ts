@@ -55,11 +55,7 @@ export default class Mnemonic implements IMnemonic {
     return wordlist[Number(wordIndex)];
   }
 
-  public GenerateNValuesOfYBits(
-    n: number,
-    y: number,
-    seed?: string
-  ): bigint[] {
+  public GenerateNValuesOfYBits(n: number, y: number, seed?: string): bigint[] {
     const rand = new Rand(seed);
     const values: bigint[] = new Array<bigint>(n);
     const maxValue = BigInt(2) ** BigInt(y + 1) - BigInt(1); // 2^y - 1 eg 2^8 - 1 = 255, 2^11 - 1 = 2047
@@ -69,9 +65,17 @@ export default class Mnemonic implements IMnemonic {
     return values;
   }
 
-  public JoinAndPadGeneratedValues(values: bigint[], expectedLength?: number, radix?: number): string {
+  public JoinAndPadGeneratedValues(
+    values: bigint[],
+    expectedLength?: number,
+    radix?: number
+  ): string {
     const defaultRadix = radix ?? 16;
-    const hexValues = values.map((value) => value.toString(defaultRadix).padStart(defaultRadix == 2 ? 8 : 2, '0')).join('');
+    const hexValues = values
+      .map((value) =>
+        value.toString(defaultRadix).padStart(defaultRadix == 2 ? 8 : 2, '0')
+      )
+      .join('');
     if (expectedLength) {
       return hexValues.padStart(expectedLength, '0');
     }
@@ -90,11 +94,20 @@ export default class Mnemonic implements IMnemonic {
     // round up to the nearest multiple of 8 (byte)
     const totalBytes = Math.ceil(totalBits / 8);
     const groupValues = this.GenerateNValuesOfYBits(wordCount, bitsPerWord);
-    const paddedValues = this.JoinAndPadGeneratedValues(groupValues, totalBytes * 2, 16);
-    const groupBytes = Buffer.from(paddedValues, 'hex');
-
-    // map the bit groupings to the dictionary
-    const words = groupValues.map((value) => wordlist[Number(value)]);
+    const paddedValues = this.JoinAndPadGeneratedValues(
+      groupValues,
+      totalBytes * 2,
+      16
+    );
+    const words: string[] = new Array<string>(wordCount);
+    for (let i = 0; i < wordCount; i++) {
+      const chunkBits = paddedValues.substring(
+        (i * bitsPerWord) / 4,
+        ((i + 1) * bitsPerWord) / 4
+      );
+      const wordIndex = parseInt(chunkBits, 16) % dictionarySize;
+      words[i] = wordlist[wordIndex];
+    }
     return {
       phrase: words.join(' '),
       checkWord: this.GenerateCheckWord(words.join(' '), wordlist),
@@ -118,7 +131,11 @@ export default class Mnemonic implements IMnemonic {
     const words = phrase.split(' ');
     const wordCount = words.length;
     const wordValues = this.PhraseToValues(phrase, wordlist);
-    const paddedValues = this.JoinAndPadGeneratedValues(wordValues, wordCount * 2, 16);
+    const paddedValues = this.JoinAndPadGeneratedValues(
+      wordValues,
+      wordCount * 2,
+      16
+    );
     return Buffer.from(paddedValues, 'hex');
   }
 
@@ -132,26 +149,23 @@ export default class Mnemonic implements IMnemonic {
     // number of bits needed to represent the highest index in the dictionary
     const bitsPerWord = Math.ceil(Math.log2(dictionarySize));
     const totalBits = wordCount * bitsPerWord;
+    // round up to the nearest multiple of 8 (byte)
     const totalBytes = Math.ceil(totalBits / 8);
-
-    const binarySeed = new Uint8Array(totalBytes);
-    for (let i = 0; i < seed.length; i++) {
-      binarySeed[i] = seed[i];
-    }
-    const seedBits = Array.from(binarySeed)
-      .map((byte) => byte.toString(2).padStart(bitsPerWord, '0'))
-      .join('');
-
-    const phrase: string[] = new Array<string>(wordCount);
-    // break the seed into groups of bitsRequired (11 for 2048)
+    const groupValues = this.GenerateNValuesOfYBits(wordCount, bitsPerWord);
+    const paddedValues = this.JoinAndPadGeneratedValues(
+      groupValues,
+      totalBytes * 2,
+      16
+    );
+    const words: string[] = new Array<string>(wordCount);
     for (let i = 0; i < wordCount; i++) {
-      const start = i * bitsPerWord;
-      const end = start + bitsPerWord;
-      const chunkBits = seedBits.substring(start, end);
-      const wordIndex = Number('0b' + chunkBits);
-      const word = wordlist[wordIndex];
-      phrase[i] = word;
+      const chunkBits = paddedValues.substring(
+        (i * bitsPerWord) / 4,
+        ((i + 1) * bitsPerWord) / 4
+      );
+      const wordIndex = parseInt(chunkBits, 16) % dictionarySize;
+      words[i] = wordlist[wordIndex];
     }
-    return phrase.join(' ');
+    return words.join(' ');
   }
 }
