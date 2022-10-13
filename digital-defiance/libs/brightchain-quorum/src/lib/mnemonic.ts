@@ -54,7 +54,6 @@ export default class Mnemonic implements IMnemonic {
 
       // addBase += groupValues[i] * (i > 0 ? BigInt(i) ** BigInt(dictionarySize) : 1n);
       // xorBase ^= groupValues[i];
-      return wordlist[Number(addBase % BigInt(dictionarySize))];
     }
 
     // now that we have a list of candidates, take the index modulo the number of candidates
