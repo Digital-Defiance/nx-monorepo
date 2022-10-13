@@ -44,33 +44,20 @@ export default class Mnemonic implements IMnemonic {
     const bitGroups: string[] = new Array<string>(wordCount);
     const groupValues: bigint[] = new Array(wordCount);
 
-    // with 11 bits, we can represent 2048 values
-    // pretend this is base 2048
-    // add 2048*
-
-    let addBase = 0n;
-    let xorBase = 0n;
-
+    // say we have 24 words, each word is 11 bits, so we have 264 bits
+    // either xor all the words together, or add them together and use a modulo
+    // why not do both
+    let xorValue = BigInt(0);
+    let addValue = BigInt(0);
     for (let i = 0; i < wordCount; i++) {
-      // locate the word in the wordlist
       const wordBits = wordValues[i].toString(2).padStart(bitsRequired, '0');
       bitGroups[i] = wordBits;
       groupValues[i] = BigInt('0b' + wordBits);
-
-      addBase +=
-        groupValues[i] * (i > 0 ? BigInt(i) ** BigInt(dictionarySize) : 1n);
-      xorBase ^= groupValues[i];
-
-      // addBase += groupValues[i] * (i > 0 ? BigInt(i) ** BigInt(dictionarySize) : 1n);
-      // xorBase ^= groupValues[i];
+      xorValue ^= groupValues[i];
+      addValue += groupValues[i];
     }
-
-    // now that we have a list of candidates, take the index modulo the number of candidates
-    const checkWordIndex = Number(
-      (addBase % BigInt(dictionarySize) ^ xorBase) % BigInt(dictionarySize)
-    );
-    const checkWord = wordlist[checkWordIndex];
-    return checkWord;
+    const wordIndex = xorValue ^ (addValue % BigInt(dictionarySize));
+    return wordlist[Number(wordIndex)];
   }
 
   public GenerateMnemonicString(
