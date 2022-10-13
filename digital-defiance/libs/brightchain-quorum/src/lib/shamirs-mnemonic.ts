@@ -13,6 +13,19 @@ export default class ShamirsMnemonic implements IMnemonic {
     this.words = r.phrase.split(' ');
     this.checkWord = r.checkWord;
   }
+  public GenerateSeed(
+    wordCount: number | undefined,
+    wordlist: string[]
+  ): Buffer {
+    throw new Error('Method not implemented.');
+  }
+  public SeedToMnemonicString(
+    seed: Buffer,
+    wordlist: string[],
+    wordCount?: number
+  ): { phrase: string; checkWord: string } {
+    throw new Error('Method not implemented.');
+  }
   public GenerateNValuesOfYBits(n: number, y: number, seed: string): bigint[] {
     throw new Error('Method not implemented.');
   }
@@ -117,13 +130,6 @@ export default class ShamirsMnemonic implements IMnemonic {
     throw new Error('Method not implemented.');
   }
   public MnemonicStringToSeed(phrase: string, wordlist: string[]): Buffer {
-    throw new Error('Method not implemented.');
-  }
-  public SeedToMnemonicString(
-    seed: Buffer,
-    wordlist: string[],
-    wordCount = 24
-  ): string {
     throw new Error('Method not implemented.');
   }
 }

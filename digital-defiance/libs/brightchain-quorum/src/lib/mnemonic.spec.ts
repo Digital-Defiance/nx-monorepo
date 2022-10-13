@@ -76,7 +76,7 @@ describe('mnemonic', () => {
     // convert back to mnemonic reliably
     const mnemonic2 = mnemonicInstance.SeedToMnemonicString(seed, wordList);
     expect(mnemonic2).toBeTruthy();
-    expect(mnemonic2.split(' ').length).toEqual(wordCount);
+    expect(mnemonic2.phrase.split(' ').length).toEqual(wordCount);
     expect(mnemonic2).toEqual(mnemonic.phrase);
   });
 
@@ -100,7 +100,7 @@ describe('mnemonic', () => {
     // convert back
     const mnemonic2 = mnemonicInstance.SeedToMnemonicString(seed, wordList);
     expect(mnemonic2).toBeTruthy();
-    expect(mnemonic2.split(' ').length).toEqual(wordCount);
+    expect(mnemonic2.phrase.split(' ').length).toEqual(wordCount);
     expect(mnemonic2).toEqual(mnemonic.phrase);
   });
 });

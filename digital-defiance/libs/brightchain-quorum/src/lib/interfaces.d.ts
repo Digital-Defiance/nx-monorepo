@@ -5,13 +5,10 @@ export interface IShamirShareDetail {
 }
 
 export interface IMnemonic {
+  public GenerateSeed(wordCount = 24, wordlist: string[]): Buffer;
   static PhraseToValues(phrase: string, wordlist: string[]): bigint[];
   static GenerateCheckWord(phrase: string, wordlist: string[]): string;
-  static GenerateNValuesOfYBits(
-    n: number,
-    y: number,
-    seed: string
-  ): bigint[];
+  static GenerateNValuesOfYBits(n: number, y: number, seed: string): bigint[];
 
   static GenerateMnemonicString(
     wordCount = 24,
@@ -26,5 +23,8 @@ export interface IMnemonic {
     seed: Buffer,
     wordlist: string[],
     wordCount = 24
-  ): string;
+  ): {
+    phrase: string;
+    checkWord: string;
+  };
 }

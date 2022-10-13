@@ -27,6 +27,7 @@ export default class Mnemonic implements IMnemonic {
     }
     return wordValues;
   }
+
   public GenerateCheckWord(phrase: string, wordlist: string[]): string {
     const words = phrase.split(' ');
     const wordCount = words.length;
@@ -82,36 +83,19 @@ export default class Mnemonic implements IMnemonic {
     return hexValues;
   }
 
+  public GenerateSeed(wordCount = 24, wordlist: string[]): Buffer {
+    const requiredBits = wordCount * Math.ceil(Math.log2(wordlist.length));
+    const requiredBytes = Math.ceil(requiredBits / 8);
+    const seed = randomBytes(requiredBytes);
+    return seed;
+  }
+
   public GenerateMnemonicString(
     wordCount = 24,
     wordlist: string[]
   ): { phrase: string; checkWord: string } {
-    // assumes a filtered dictionary with no duplicates, whitespace, etc.
-    const dictionarySize = wordlist.length;
-    // number of bits needed to represent the highest index in the dictionary
-    const bitsPerWord = Math.ceil(Math.log2(dictionarySize));
-    const totalBits = wordCount * bitsPerWord;
-    // round up to the nearest multiple of 8 (byte)
-    const totalBytes = Math.ceil(totalBits / 8);
-    const groupValues = this.GenerateNValuesOfYBits(wordCount, bitsPerWord);
-    const paddedValues = this.JoinAndPadGeneratedValues(
-      groupValues,
-      totalBytes * 2,
-      16
-    );
-    const words: string[] = new Array<string>(wordCount);
-    for (let i = 0; i < wordCount; i++) {
-      const chunkBits = paddedValues.substring(
-        (i * bitsPerWord) / 4,
-        ((i + 1) * bitsPerWord) / 4
-      );
-      const wordIndex = parseInt(chunkBits, 16) % dictionarySize;
-      words[i] = wordlist[wordIndex];
-    }
-    return {
-      phrase: words.join(' '),
-      checkWord: this.GenerateCheckWord(words.join(' '), wordlist),
-    };
+    const seed = this.GenerateSeed(wordCount, wordlist);
+    return this.SeedToMnemonicString(seed, wordlist);
   }
 
   public ValidateMnemonicString(phrase: string, wordlist: string[]): boolean {
@@ -141,31 +125,16 @@ export default class Mnemonic implements IMnemonic {
 
   public SeedToMnemonicString(
     seed: Buffer,
-    wordlist: string[],
-    wordCount = 24
-  ): string {
-    // assumes a filtered dictionary with no duplicates, whitespace, etc.
-    const dictionarySize = wordlist.length;
-    // number of bits needed to represent the highest index in the dictionary
-    const bitsPerWord = Math.ceil(Math.log2(dictionarySize));
-    const totalBits = wordCount * bitsPerWord;
-    // round up to the nearest multiple of 8 (byte)
-    const totalBytes = Math.ceil(totalBits / 8);
-    const groupValues = this.GenerateNValuesOfYBits(wordCount, bitsPerWord, seed.toString('hex'));
-    const paddedValues = this.JoinAndPadGeneratedValues(
-      groupValues,
-      totalBytes * 2,
-      16
-    );
-    const words: string[] = new Array<string>(wordCount);
-    for (let i = 0; i < wordCount; i++) {
-      const chunkBits = paddedValues.substring(
-        (i * bitsPerWord) / 4,
-        ((i + 1) * bitsPerWord) / 4
-      );
-      const wordIndex = parseInt(chunkBits, 16) % dictionarySize;
-      words[i] = wordlist[wordIndex];
-    }
-    return words.join(' ');
+    wordlist: string[]
+  ): {
+    phrase: string;
+    checkWord: string;
+  } {
+    const phraseValues = this.PhraseToValues(seed.toString('hex'), wordlist);
+    const words = phraseValues.map((value) => wordlist[Number(value)]);
+    return {
+      phrase: words.join(' '),
+      checkWord: this.GenerateCheckWord(words.join(' '), wordlist),
+    };
   }
 }
