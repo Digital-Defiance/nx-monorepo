@@ -6,7 +6,7 @@ export default class ShamirsMnemonic implements IMnemonic {
   private readonly words: Array<string> = [];
   private readonly checkWord: string;
   private readonly dictionaryWords: Array<string> = [];
-  
+
   constructor(dictionaryWords: Array<string>, wordCount = 24) {
     this.dictionaryWords = dictionaryWords;
     const r = this.GenerateMnemonicString(wordCount, dictionaryWords);
@@ -101,9 +101,12 @@ export default class ShamirsMnemonic implements IMnemonic {
     ); // 64
 
     // so now we will walk through the 24 shares and extract the 11 bits needed to represent each word.
-    for (let i=0; i<wordCount; i++) {
+    for (let i = 0; i < wordCount; i++) {
       const shareComponent = shareComponents[i];
-      shareWords[i] = this.dictionaryWords[shareComponent.dictionaryIndex(this.dictionaryWords)]
+      shareWords[i] =
+        this.dictionaryWords[
+          shareComponent.dictionaryIndex(this.dictionaryWords)
+        ];
     }
     throw new Error('not implemented');
   }

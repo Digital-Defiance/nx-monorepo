@@ -4,12 +4,17 @@ import { wordlists } from 'bip39';
 const wordList: string[] = wordlists['english'];
 
 describe('mnemonic', () => {
-  it('should generate a mnemonic', () => {
+  it('should generate a mnemonic and a checkword', () => {
     const wordCount = 24;
-    const mnemonicInstance  = new Mnemonic();
-    const mnemonic = mnemonicInstance.GenerateMnemonicString(wordCount, wordList);
+    const mnemonicInstance = new Mnemonic();
+    const mnemonic = mnemonicInstance.GenerateMnemonicString(
+      wordCount,
+      wordList
+    );
     expect(mnemonic).toBeTruthy();
     expect(mnemonic.phrase.split(' ').length).toEqual(wordCount);
+    expect(mnemonic.checkWord).toBeTruthy();
+    expect(mnemonic.phrase).toContain(mnemonic.checkWord);
 
     // validate actual check string
     const isValid = mnemonicInstance.ValidateMnemonicString(
@@ -21,10 +26,14 @@ describe('mnemonic', () => {
 
   it('should detect an invalid check word', () => {
     const wordCount = 24;
-    const mnemonicInstance  = new Mnemonic();
-    const mnemonic = mnemonicInstance.GenerateMnemonicString(wordCount, wordList);
+    const mnemonicInstance = new Mnemonic();
+    const mnemonic = mnemonicInstance.GenerateMnemonicString(
+      wordCount,
+      wordList
+    );
     expect(mnemonic).toBeTruthy();
     expect(mnemonic.phrase.split(' ').length).toEqual(wordCount);
+    expect(mnemonic.checkWord).toBeTruthy();
 
     // pick a word from the dictionary that isn't the check word
     const invalidCheckWord = wordList.find(
@@ -42,17 +51,26 @@ describe('mnemonic', () => {
 
   it('should convert a mnemonic to a seed and back', () => {
     const wordCount = 24;
-    const mnemonicInstance  = new Mnemonic();
-    const mnemonic = mnemonicInstance.GenerateMnemonicString(wordCount, wordList);
+    const mnemonicInstance = new Mnemonic();
+    const mnemonic = mnemonicInstance.GenerateMnemonicString(
+      wordCount,
+      wordList
+    );
     expect(mnemonic).toBeTruthy();
     expect(mnemonic.phrase.split(' ').length).toEqual(wordCount);
 
     // convert to seed
-    const seed = mnemonicInstance.MnemonicStringToSeed(mnemonic.phrase, wordList);
+    const seed = mnemonicInstance.MnemonicStringToSeed(
+      mnemonic.phrase,
+      wordList
+    );
     expect(seed).toBeTruthy();
 
     // convert to seed again repreatably
-    const seed2 = mnemonicInstance.MnemonicStringToSeed(mnemonic.phrase, wordList);
+    const seed2 = mnemonicInstance.MnemonicStringToSeed(
+      mnemonic.phrase,
+      wordList
+    );
     expect(seed2).toBeTruthy();
     expect(seed2.toString('hex')).toEqual(seed.toString('hex'));
 
@@ -65,13 +83,19 @@ describe('mnemonic', () => {
 
   it('should convert a mnemonic to a seed and back', () => {
     const wordCount = 24;
-    const mnemonicInstance  = new Mnemonic();
-    const mnemonic = mnemonicInstance.GenerateMnemonicString(wordCount, wordList);
+    const mnemonicInstance = new Mnemonic();
+    const mnemonic = mnemonicInstance.GenerateMnemonicString(
+      wordCount,
+      wordList
+    );
     expect(mnemonic).toBeTruthy();
     expect(mnemonic.phrase.split(' ').length).toEqual(wordCount);
 
     // convert to seed
-    const seed = mnemonicInstance.MnemonicStringToSeed(mnemonic.phrase, wordList);
+    const seed = mnemonicInstance.MnemonicStringToSeed(
+      mnemonic.phrase,
+      wordList
+    );
     expect(seed).toBeTruthy();
 
     // convert back

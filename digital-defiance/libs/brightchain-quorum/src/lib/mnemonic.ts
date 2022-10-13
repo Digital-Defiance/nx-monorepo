@@ -22,16 +22,12 @@ export default class Mnemonic implements IMnemonic {
     const wordValues: bigint[] = new Array<bigint>();
     for (const word of words) {
       const index = wordlist.indexOf(word);
-      if (index === -1) 
-        throw new Error('Invalid mnemonic word');
+      if (index === -1) throw new Error('Invalid mnemonic word');
       wordValues.push(BigInt(index));
     }
     return wordValues;
   }
-  public GenerateCheckWord(
-    phrase: string,
-    wordlist: string[]
-  ): string {
+  public GenerateCheckWord(phrase: string, wordlist: string[]): string {
     const words = phrase.split(' ');
     const wordCount = words.length;
     const wordValues = this.PhraseToValues(phrase, wordlist);
@@ -55,7 +51,7 @@ export default class Mnemonic implements IMnemonic {
       xorValue ^= groupValues[i];
       addValue += groupValues[i];
     }
-    const wordIndex = xorValue ^ (addValue % BigInt(dictionarySize));
+    const wordIndex = xorValue ^ addValue % BigInt(dictionarySize);
     return wordlist[Number(wordIndex)];
   }
 
@@ -96,10 +92,7 @@ export default class Mnemonic implements IMnemonic {
     };
   }
 
-  public ValidateMnemonicString(
-    phrase: string,
-    wordlist: string[]
-  ): boolean {
+  public ValidateMnemonicString(phrase: string, wordlist: string[]): boolean {
     // split input words
     const words = phrase.split(' ');
     // set aside the check word
@@ -112,10 +105,7 @@ export default class Mnemonic implements IMnemonic {
     return actualCheckWord === expectedCheckWordInfo.checkWord;
   }
 
-  public MnemonicStringToSeed(
-    phrase: string,
-    wordlist: string[]
-  ): Buffer {
+  public MnemonicStringToSeed(phrase: string, wordlist: string[]): Buffer {
     const words = phrase.split(' ');
     const wordCount = words.length;
     const wordValues = this.PhraseToValues(phrase, wordlist);
