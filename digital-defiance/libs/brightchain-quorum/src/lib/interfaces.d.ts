@@ -5,6 +5,7 @@ export interface IShamirShareDetail {
 }
 
 export interface IMnemonic {
+  static PhraseToValues(phrase: string, wordlist: string[]): bigint[];
   static GenerateCheckWord(phrase: string, wordlist: string[]): string;
 
   static GenerateMnemonicString(

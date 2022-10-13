@@ -17,12 +17,25 @@ import { IMnemonic } from './interfaces';
  * - the checksum word is purely for validation purposes
  */
 export default class Mnemonic implements IMnemonic {
+  public PhraseToValues(phrase: string, wordlist: string[]): bigint[] {
+    const words = phrase.split(' ');
+    const wordValues: bigint[] = new Array<bigint>();
+    for (const word of words) {
+      const index = wordlist.indexOf(word);
+      if (index === -1) {
+        throw new Error('Invalid mnemonic word');
+      }
+      wordValues.push(BigInt(index));
+    }
+    return wordValues;
+  }
   public GenerateCheckWord(
     phrase: string,
     wordlist: string[]
   ): string {
     const words = phrase.split(' ');
     const wordCount = words.length;
+    const wordValues = this.PhraseToValues(phrase, wordlist);
     // assumes a filtered dictionary with no duplicates, whitespace, etc.
     const dictionarySize = wordlist.length;
     // number of bits needed to represent the highest index in the dictionary
@@ -40,11 +53,7 @@ export default class Mnemonic implements IMnemonic {
 
     for (let i = 0; i < wordCount; i++) {
       // locate the word in the wordlist
-      const wordIndex = wordlist.indexOf(words[i]);
-      if (wordIndex < 0) {
-        throw new Error(`Word not found in wordlist: ${words[i]}`);
-      }
-      const wordBits = wordIndex.toString(2).padStart(bitsRequired, '0');
+      const wordBits = wordValues[i].toString(2).padStart(bitsRequired, '0');
       bitGroups[i] = wordBits;
       groupValues[i] = BigInt('0b' + wordBits);
 
@@ -123,6 +132,7 @@ export default class Mnemonic implements IMnemonic {
   ): Buffer {
     const words = phrase.split(' ');
     const wordCount = words.length;
+    const wordValues = this.PhraseToValues(phrase, wordlist);
     // assumes a filtered dictionary with no duplicates, whitespace, etc.
     const dictionarySize = wordlist.length;
     // number of bits needed to represent the highest index in the dictionary
@@ -132,11 +142,7 @@ export default class Mnemonic implements IMnemonic {
     const groupValues: bigint[] = new Array(wordCount);
     const groupHexValues: string[] = new Array(wordCount);
     for (let i = 0; i < wordCount; i++) {
-      const wordIndex = wordlist.indexOf(words[i]);
-      if (wordIndex < 0) {
-        throw new Error(`Word not found in wordlist: ${words[i]}`);
-      }
-      const wordBits = wordIndex.toString(2).padStart(bitsPerWord, '0');
+      const wordBits = wordValues[i].toString(2).padStart(bitsPerWord, '0');
       bitGroups[i] = wordBits;
       groupValues[i] = BigInt('0b' + wordBits);
       groupHexValues[i] = groupValues[i].toString(16).padStart(2, '0');

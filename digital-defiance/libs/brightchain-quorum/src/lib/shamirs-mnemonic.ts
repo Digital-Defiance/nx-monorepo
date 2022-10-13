@@ -12,6 +12,18 @@ export default class ShamirsMnemonic implements IMnemonic {
     this.words = r.phrase.split(' ');
     this.checkWord = r.checkWord;
   }
+  public PhraseToValues(phrase: string, wordlist: string[]): bigint[] {
+    const words = phrase.split(' ');
+    const wordValues: bigint[] = new Array<bigint>();
+    for (const word of words) {
+      const index = wordlist.indexOf(word);
+      if (index === -1) {
+        throw new Error('Invalid mnemonic word');
+      }
+      wordValues.push(BigInt(index));
+    }
+    return wordValues;
+  }
   public GenerateCheckWord(phrase: string, wordlist: string[]): string {
     throw new Error('Method not implemented.');
   }
