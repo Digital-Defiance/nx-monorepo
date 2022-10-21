@@ -21,5 +21,11 @@
     "@reduxjs/toolkit": "^1.8.5",
     "quantum-tensors": "^0.4.15",
     "uuid": "^9.0.0"
+  },
+  "workspaces": [
+    "stargate-n"
+  ],
+  "nx": {
+    "tags": ["scope:stargate-n", "type:library"]
   }
 }

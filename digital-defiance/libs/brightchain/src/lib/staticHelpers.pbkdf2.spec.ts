@@ -1,6 +1,6 @@
 import StaticHelpersPbkdf2 from './staticHelpers.pbkdf2';
 
-describe('brightchainQuorum', () => {
+describe('brightchain staticHelpers.pbkdf2', () => {
   it('should derive the same password twice', () => {
     const password = 'password';
     const derivedKey = StaticHelpersPbkdf2.deriveKeyFromPassword(password);

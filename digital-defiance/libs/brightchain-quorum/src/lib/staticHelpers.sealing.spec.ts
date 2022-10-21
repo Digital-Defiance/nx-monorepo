@@ -1,7 +1,7 @@
 import { IMemberShareCount } from './interfaces';
-import QuorumMember from './member';
-import QuorumMemberType from './quorumMemberType';
+import BrightChainMember from 'libs/brightchain/src/lib/brightChainMember';
 import StaticHelpersSealing from './staticHelpers.sealing';
+import BrightChainMemberType from 'libs/brightchain/src/lib/memberType';
 
 describe('brightchainQuorum', () => {
   it('should determine the correct number of shares when no additional information is given', () => {
@@ -122,17 +122,17 @@ describe('brightchainQuorum', () => {
     expect(sharesByMemberIdSortedArray2.shares[3]).toEqual(1);
   });
   it('should seal and unlock a document', () => {
-    const alice = QuorumMember.newMember(
-      QuorumMemberType.User,
+    const alice = BrightChainMember.newMember(
+      BrightChainMemberType.User,
       'alice',
       'alice@example.com'
     );
-    const bob = QuorumMember.newMember(
-      QuorumMemberType.User,
+    const bob = BrightChainMember.newMember(
+      BrightChainMemberType.User,
       'bob',
       'bob@example.com'
     );
-    const members: QuorumMember[] = [alice, bob];
+    const members: BrightChainMember[] = [alice, bob];
     const document = { hello: 'world' };
     const sealedDocument = StaticHelpersSealing.quorumSeal<{ hello: string }>(
       alice,
@@ -145,17 +145,17 @@ describe('brightchainQuorum', () => {
     expect(unlockedDocument).toEqual(document);
   });
   it('should encrypt and decrypt the shares for the member list successfully', () => {
-    const alice = QuorumMember.newMember(
-      QuorumMemberType.User,
+    const alice = BrightChainMember.newMember(
+      BrightChainMemberType.User,
       'alice',
       'alice@example.com'
     );
-    const bob = QuorumMember.newMember(
-      QuorumMemberType.User,
+    const bob = BrightChainMember.newMember(
+      BrightChainMemberType.User,
       'bob',
       'bob@example.com'
     );
-    const members: QuorumMember[] = [alice, bob];
+    const members: BrightChainMember[] = [alice, bob];
     const document = { hello: 'world' };
     const sealedDocument = StaticHelpersSealing.quorumSeal<{ hello: string }>(
       alice,

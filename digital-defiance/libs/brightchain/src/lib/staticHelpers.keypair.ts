@@ -7,7 +7,7 @@ import {
   mnemonicToEntropy,
   entropyToMnemonic,
 } from 'bip39';
-import QuorumMember from './member';
+import BrightChainMember from './brightChainMember';
 import {
   createCipheriv,
   createDecipheriv,
@@ -33,7 +33,8 @@ import StaticHelpers from './staticHelpers';
 import StaticHelpersSymmetric from './staticHelpers.symmetric';
 
 /**
- * @description Static helper functions for Brightchain Quorum. Encryption and other utilities.
+ * @description
+ * Static helper functions for BrightChain and BrightChain Quorum. Encryption and other utilities.
  * - Uses secrets.js-34r7h fork of secrets.js for Shamir's Secret Sharing
  * - Uses elliptic for ECDSA
  * - Uses bip39 for BIP39 Mnemonic generation
@@ -486,7 +487,7 @@ export default abstract class StaticHelpersKeyPair {
    * @param member
    * @returns
    */
-  public static recoverDataKeyFromSigningKey(member: QuorumMember): Buffer {
+  public static recoverDataKeyFromSigningKey(member: BrightChainMember): Buffer {
     if (!member.hasDataPrivateKey) {
       throw new Error('Member data private key not found');
     }
@@ -519,7 +520,7 @@ export default abstract class StaticHelpersKeyPair {
    * Do not change this as it will break existing data keys
    */
   public static signingKeyPairToDataKeyPassphraseFromMember(
-    member: QuorumMember
+    member: BrightChainMember
   ): string {
     return StaticHelpersKeyPair.signingKeyPairToDataKeyPassphraseFromMemberId(
       member.id,

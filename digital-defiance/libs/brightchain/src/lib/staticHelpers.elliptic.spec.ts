@@ -5,7 +5,7 @@ import { Signature } from './signature';
 import StaticHelpersElliptic from './staticHelpers.elliptic';
 import StaticHelpersKeyPair from './staticHelpers.keypair';
 
-describe('brightchain-quorum staticHelpers.elliptic', () => {
+describe('brightchain staticHelpers.elliptic', () => {
   it('should convert between EC classes', () => {
     const data = Buffer.from('hello world');
     const keyPair = StaticHelpersKeyPair.generateSigningKeyPair();

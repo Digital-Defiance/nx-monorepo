@@ -1,12 +1,10 @@
-import exp = require('constants');
 import { randomUUID } from 'crypto';
-import QuorumMember from './member';
-import StaticHelpers from 'libs/brightchain/src/lib/staticHelpers';
-import StaticHelpersKeyPair from 'libs/brightchain/src/lib/staticHelpers.keypair';
-import BrightChainMemberType from 'libs/brightchain/src/lib/memberType';
-describe('brightchainQuorum', () => {
+import BrightChainMember from './brightChainMember';
+import BrightChainMemberType from './memberType';
+import StaticHelpersKeyPair from './staticHelpers.keypair';
+describe('brightchain', () => {
   it('should sign and verify a message for a member', () => {
-    const member = QuorumMember.newMember(
+    const member = BrightChainMember.newMember(
       BrightChainMemberType.User,
       'Bob Smith',
       'bob@example.com'
@@ -20,7 +18,7 @@ describe('brightchainQuorum', () => {
   it('should fail to create with an invalid id', () => {
     expect(
       () =>
-        new QuorumMember(
+        new BrightChainMember(
           BrightChainMemberType.User,
           'alice',
           'alice@example.com',
@@ -32,19 +30,23 @@ describe('brightchainQuorum', () => {
   });
   it('should fail to create a user with no name', () => {
     expect(() =>
-      QuorumMember.newMember(BrightChainMemberType.User, '', 'alice@example.com')
+      BrightChainMember.newMember(
+        BrightChainMemberType.User,
+        '',
+        'alice@example.com'
+      )
     ).toThrowError('Member name missing');
   });
   it('should fail to create a user with whitespace at the start or end of their name', () => {
     expect(() =>
-      QuorumMember.newMember(
+      BrightChainMember.newMember(
         BrightChainMemberType.User,
         'alice ',
         'alice@example.com'
       )
     ).toThrowError('Member name has leading or trailing spaces');
     expect(() =>
-      QuorumMember.newMember(
+      BrightChainMember.newMember(
         BrightChainMemberType.User,
         ' alice',
         'alice@example.com'
@@ -53,19 +55,19 @@ describe('brightchainQuorum', () => {
   });
   it('should fail to create a user with no email', () => {
     expect(() =>
-      QuorumMember.newMember(BrightChainMemberType.User, 'alice', '')
+      BrightChainMember.newMember(BrightChainMemberType.User, 'alice', '')
     ).toThrowError('Member email missing');
   });
   it('should fail to create a user with an email that has whitespace at the start or end', () => {
     expect(() =>
-      QuorumMember.newMember(
+      BrightChainMember.newMember(
         BrightChainMemberType.User,
         'alice',
         ' alice@example.com'
       )
     ).toThrowError('Member email has leading or trailing spaces');
     expect(() =>
-      QuorumMember.newMember(
+      BrightChainMember.newMember(
         BrightChainMemberType.User,
         'alice',
         'alice@example.com '
@@ -74,18 +76,18 @@ describe('brightchainQuorum', () => {
   });
   it('should fail to create a user with an invalid email', () => {
     expect(() => {
-      QuorumMember.newMember(BrightChainMemberType.User, 'Nope', 'x!foo');
+      BrightChainMember.newMember(BrightChainMemberType.User, 'Nope', 'x!foo');
     }).toThrowError('Member email is invalid');
   });
   it('should check whether a user has a data key pair', () => {
-    const member = QuorumMember.newMember(
+    const member = BrightChainMember.newMember(
       BrightChainMemberType.User,
       'Bob Smith',
       'bob@example.com'
     );
     expect(member.hasDataPrivateKey).toEqual(true);
     expect(member.hasDataKeyPair).toEqual(true);
-    const noKeyMember = new QuorumMember(
+    const noKeyMember = new BrightChainMember(
       BrightChainMemberType.User,
       'Charlie Smith',
       'charlie@example.com'
@@ -94,14 +96,14 @@ describe('brightchainQuorum', () => {
     expect(noKeyMember.hasDataPrivateKey).toEqual(false);
   });
   it('should check whether a user has a signing key pair', () => {
-    const member = QuorumMember.newMember(
+    const member = BrightChainMember.newMember(
       BrightChainMemberType.User,
       'Alice Smith',
       'alice@example.com'
     );
     expect(member.hasSigningKeyPair).toEqual(true);
     expect(member.hasSigningPrivateKey).toEqual(true);
-    const noKeyMember = new QuorumMember(
+    const noKeyMember = new BrightChainMember(
       BrightChainMemberType.User,
       'Bob Smith',
       'bob@example.com'
@@ -113,7 +115,7 @@ describe('brightchainQuorum', () => {
     const newId = randomUUID();
     const keyPair = StaticHelpersKeyPair.generateMemberKeyPairs(newId);
     expect(() => {
-      new QuorumMember(
+      new BrightChainMember(
         BrightChainMemberType.User,
         'alice',
         'alice@example.com',
@@ -132,7 +134,7 @@ describe('brightchainQuorum', () => {
     const newId = randomUUID();
     const keyPair = StaticHelpersKeyPair.generateMemberKeyPairs(newId);
     expect(() => {
-      new QuorumMember(
+      new BrightChainMember(
         BrightChainMemberType.User,
         'alice',
         'alice@example.com',

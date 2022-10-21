@@ -90,5 +90,6 @@
       }
     }
   },
-  "tags": []
+  "tags": ["scope:stargate-256", "type:application"],
+  "implicitDependencies": ["stargate-256-core"]
 }

@@ -1,5 +1,5 @@
-import QuorumMember from './member';
-import QuorumMemberType from './quorumMemberType';
+import BrightChainMember from './brightChainMember';
+import BrightChainMemberType from './memberType';
 import StaticHelpers from './staticHelpers';
 
 describe('staticHelpers', () => {
@@ -30,18 +30,18 @@ describe('staticHelpers', () => {
     });
   });
   it('should flag when there is a non-user member', () => {
-    const alice = QuorumMember.newMember(
-      QuorumMemberType.User,
+    const alice = BrightChainMember.newMember(
+      BrightChainMemberType.User,
       'alice',
       'alice@example.com'
     );
-    const bob = QuorumMember.newMember(
-      QuorumMemberType.Admin,
+    const bob = BrightChainMember.newMember(
+      BrightChainMemberType.Admin,
       'bob',
       'bob@example.com'
     );
-    const charlie = QuorumMember.newMember(
-      QuorumMemberType.System,
+    const charlie = BrightChainMember.newMember(
+      BrightChainMemberType.System,
       'charlie',
       'charlie@example.com'
     );

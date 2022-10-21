@@ -29,5 +29,6 @@
       }
     }
   },
-  "tags": []
+  "tags": ["scope:brightchain"],
+  "implicitDependencies": ["brightchain"]
 }

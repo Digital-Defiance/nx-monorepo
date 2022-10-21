@@ -1,9 +1,11 @@
+// TODO: move to brightchain, reference from there
 import {
   createHash,
 } from 'crypto';
 
 /**
- * @description Static helper functions for Brightchain Quorum. Encryption and other utilities.
+ * @description
+ * Static helper functions for BrightChain and BrightChain Quorum. Encryption and other utilities.
  * - Uses secrets.js-34r7h fork of secrets.js for Shamir's Secret Sharing
  * - Uses elliptic for ECDSA
  * - Uses bip39 for BIP39 Mnemonic generation

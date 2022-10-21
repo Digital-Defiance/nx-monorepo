@@ -1,12 +1,12 @@
 import { mnemonicToEntropy, validateMnemonic } from 'bip39';
-import QuorumMember from './member';
-import QuorumMemberType from './quorumMemberType';
+import BrightChainMember from './brightChainMember';
 import StaticHelpersKeyPair from './staticHelpers.keypair';
 import * as uuid from 'uuid';
 import { ec as EC } from 'elliptic';
 import { ISimpleKeyPairBuffer } from './interfaces';
+import BrightChainMemberType from './memberType';
 
-describe('brightchainQuorum', () => {
+describe('brightchain staticHelpers.keyPaie', () => {
   it('should generate a keypair and seed', () => {
     const keyPair = StaticHelpersKeyPair.generateSigningKeyPair();
     expect(keyPair.privateKey).toBeTruthy();
@@ -110,8 +110,8 @@ describe('brightchainQuorum', () => {
     ).toBeTruthy();
   });
   it("should throw an error when trying to get a key when we don't have one", () => {
-    const member = new QuorumMember(
-      QuorumMemberType.User,
+    const member = new BrightChainMember(
+      BrightChainMemberType.User,
       'alice',
       'alice@example.com'
     );
@@ -123,8 +123,8 @@ describe('brightchainQuorum', () => {
     expect(() => member.signingPublicKey).toThrowError();
   });
   it('should fail to get the signing private key when we have a public key only', () => {
-    const alice = QuorumMember.newMember(
-      QuorumMemberType.User,
+    const alice = BrightChainMember.newMember(
+      BrightChainMemberType.User,
       'alice',
       'alice@example.com'
     );
@@ -138,8 +138,8 @@ describe('brightchainQuorum', () => {
     expect(alice.hasSigningPrivateKey).toBeFalsy();
   });
   it('should fail to get the data private key when we have a public key only', () => {
-    const alice = QuorumMember.newMember(
-      QuorumMemberType.User,
+    const alice = BrightChainMember.newMember(
+      BrightChainMemberType.User,
       'alice',
       'alice@example.com'
     );

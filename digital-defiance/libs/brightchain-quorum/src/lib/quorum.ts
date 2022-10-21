@@ -3,8 +3,8 @@ import * as uuid from 'uuid';
 import { EncryptedShares, IMemberShareCount } from './interfaces';
 import QuorumMember from './member';
 import QuorumDataRecord from './quorumDataRecord';
-import SimpleStore from './stores/simpleStore';
-import BufferStore from './stores/bufferStore';
+import SimpleStore from 'libs/brightchain/src/lib/stores/simpleStore';
+import BufferStore from 'libs/brightchain/src/lib/stores/bufferStore';
 import StaticHelpersSealing from './staticHelpers.sealing';
 
 export default class BrightChainQuorum {

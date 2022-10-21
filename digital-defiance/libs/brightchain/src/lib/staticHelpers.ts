@@ -1,7 +1,7 @@
 // TODO: split
 import Rand from 'rand-seed';
-import QuorumMember from './member';
-import QuorumMemberType from './quorumMemberType';
+import BrightChainMember from './brightChainMember';
+import BrightChainMemberType from './memberType';
 
 /**
  * @description Static helper functions for Brightchain Quorum. Encryption and other utilities.
@@ -52,9 +52,9 @@ export default abstract class StaticHelpers {
    * @param members
    * @returns
    */
-  public static membersAreAllUsers(members: QuorumMember[]): boolean {
+  public static membersAreAllUsers(members: BrightChainMember[]): boolean {
     for (const member of members) {
-      if (member.memberType == QuorumMemberType.System) {
+      if (member.memberType == BrightChainMemberType.System) {
         return false;
       }
     }

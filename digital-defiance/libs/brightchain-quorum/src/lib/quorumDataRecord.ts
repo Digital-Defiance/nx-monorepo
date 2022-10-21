@@ -1,8 +1,8 @@
 import * as uuid from 'uuid';
 import QuorumMember from './member';
 import { ec as EC } from 'elliptic';
-import StaticHelpers from './staticHelpers.checksum';
-import StaticHelpersElliptic from './staticHelpers.elliptic';
+import StaticHelpers from 'libs/brightchain/src/lib/staticHelpers.checksum';
+import StaticHelpersElliptic from 'libs/brightchain/src/lib/staticHelpers.elliptic';
 import { IMemberShareCount } from './interfaces';
 
 export default class QuorumDataRecord {

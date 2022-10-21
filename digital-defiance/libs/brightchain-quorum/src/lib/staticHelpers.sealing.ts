@@ -1,16 +1,16 @@
 // TODO: split
 import * as secrets from 'secrets.js-34r7h';
 import { Shares } from 'secrets.js-34r7h';
-import QuorumDataRecord from './quorumDataRecord';
-import QuorumMember from './member';
+import BrightChainMember from 'libs/brightchain/src/lib/brightChainMember';
 import {
   IQoroumSealResults,
   EncryptedShares,
   IMemberShareCount,
   ISortedMemberShareCountArrays,
 } from './interfaces';
-import StaticHelpersKeyPair from './staticHelpers.keypair';
-import StaticHelpersSymmetric from './staticHelpers.symmetric';
+import StaticHelpersKeyPair from 'libs/brightchain/src/lib/staticHelpers.keypair';
+import StaticHelpersSymmetric from 'libs/brightchain/src/lib/staticHelpers.symmetric';
+import QuorumDataRecord from './quorumDataRecord';
 
 /**
  * @description Static helper functions for Brightchain Quorum. Encryption and other utilities.
@@ -193,7 +193,7 @@ export default abstract class StaticHelpersSealing {
    * @returns
    */
   public static quorumSeal<T>(
-    agent: QuorumMember,
+    agent: BrightChainMember,
     data: T,
     amongstMemberIds: string[],
     shareCountByMemberId?: Array<IMemberShareCount>,
@@ -273,7 +273,7 @@ export default abstract class StaticHelpersSealing {
    */
   public static encryptSharesForMembers(
     shares: Shares,
-    members: QuorumMember[],
+    members: BrightChainMember[],
     shareCountByMemberId?: Array<IMemberShareCount>
   ): Map<string, EncryptedShares> {
     const shareCountsByMemberId: Map<string, number> =
@@ -336,7 +336,7 @@ export default abstract class StaticHelpersSealing {
    */
   public static decryptSharesForMembers(
     encryptedShares: EncryptedShares,
-    members: QuorumMember[],
+    members: BrightChainMember[],
     shareCountByMemberId?: Array<IMemberShareCount>
   ): Shares {
     const shareCountsByMemberId: Map<string, number> =

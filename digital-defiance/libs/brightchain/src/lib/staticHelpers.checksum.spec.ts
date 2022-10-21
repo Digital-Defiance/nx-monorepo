@@ -1,6 +1,6 @@
 import StaticHelpersChecksum from './staticHelpers.checksum';
 
-describe('brightchain-quorum staticHelpers.checksum', () => {
+describe('brightchain staticHelpers.checksum', () => {
   it('should generate the same checksum for the same data', () => {
     const data = Buffer.from('hello world');
     const checksum = StaticHelpersChecksum.calculateChecksum(data);

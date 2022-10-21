@@ -90,5 +90,6 @@
       }
     }
   },
-  "tags": []
+  "tags": ["scope:stargate-n", "type:application"],
+  "implicitDependencies": ["stargate-n-core"]
 }

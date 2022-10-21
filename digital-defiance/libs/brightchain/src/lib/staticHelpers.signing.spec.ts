@@ -1,7 +1,7 @@
 import StaticHelpersElliptic from './staticHelpers.elliptic';
 import StaticHelpersKeyPair from './staticHelpers.keypair';
 
-describe('brightchainQuorum', () => {
+describe('brightchain staticHelpers.signing', () => {
   // TODO determine which of these methods to support, or both
   it('should sign and verify a message using StaticHelpersKeyPair.verifyWithSigningKey', () => {
     const keyPair = StaticHelpersKeyPair.generateSigningKeyPair();
