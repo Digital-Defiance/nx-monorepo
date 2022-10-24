@@ -6,8 +6,9 @@ import StaticHelpersChecksum from '../staticHelpers.checksum';
 import Block from './block';
 import BlockSize, { blockSizeToLength, blockSizes } from './blockSizes';
 
+const traceLog: Array<TraceBreadCrumb> = [];
 class TraceBreadCrumb {
-  public static readonly traceLog: Array<TraceBreadCrumb> = [];
+
   public readonly date: Date;
   public readonly functionName: string;
   public readonly functionArgs: Array<any>;
@@ -15,7 +16,7 @@ class TraceBreadCrumb {
     this.date = new Date();
     this.functionName = functionName;
     this.functionArgs = args;
-    TraceBreadCrumb.traceLog.push(this);
+    traceLog.push(this);
   }
   public static trace(functionName: string, ...args: Array<any>): TraceBreadCrumb {
     return new TraceBreadCrumb(functionName, ...args);
@@ -188,4 +189,8 @@ describe('block', () => {
     );
     itTrace.trace('returning from test')
   });
+  pTrace.trace('returning from all tests')
+console.log(traceLog);
 });
+pTrace.trace('returned');
+console.log(traceLog[traceLog.length - 1]);
