@@ -11,7 +11,7 @@ import {
   HanselGretelBreadCrumbTrail,
 } from '../HanselGretelBreadCrumbTrail';
 const traceLog: Array<IBreadCrumbTrace> = [];
-const pTrace = HanselGretelBreadCrumbTrail.addCrumb(traceLog, 'block.spec.ts');
+const pTrace = HanselGretelBreadCrumbTrail.addCrumb(true, traceLog, 'block.spec.ts');
 
 function randomBlockSize(): BlockSize {
   pTrace.forkAndAddCrumb('randomBlockSize');

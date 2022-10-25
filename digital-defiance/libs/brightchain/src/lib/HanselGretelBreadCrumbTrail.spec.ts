@@ -2,10 +2,12 @@ import {
   HanselGretelBreadCrumbTrail,
   IBreadCrumbTrace,
 } from './HanselGretelBreadCrumbTrail';
+const emitConsoleOnAdd = false;
 describe('HanselGretelBreadCrumbTrail', () => {
   it('should trace', () => {
     const traceLog: Array<IBreadCrumbTrace> = [];
     const firstCrumb = HanselGretelBreadCrumbTrail.addCrumb(
+      emitConsoleOnAdd,
       traceLog,
       'HanselGretelBreadCrumbTrail.spec.ts'
     );
@@ -32,6 +34,7 @@ describe('HanselGretelBreadCrumbTrail', () => {
   it('should trace deeper', () => {
     const traceLog: Array<IBreadCrumbTrace> = [];
     const firstCrumb = HanselGretelBreadCrumbTrail.addCrumb(
+      emitConsoleOnAdd,
       traceLog,
       'HanselGretelBreadCrumbTrail.spec.ts'
     );
@@ -58,6 +61,7 @@ describe('HanselGretelBreadCrumbTrail', () => {
   it('should trace with self logging callback', () => {
     const traceLog: Array<IBreadCrumbTrace> = [];
     const firstCrumb = HanselGretelBreadCrumbTrail.addCrumb(
+      emitConsoleOnAdd,
       traceLog,
       'HanselGretelBreadCrumbTrail.spec.ts'
     );
@@ -92,6 +96,7 @@ describe('HanselGretelBreadCrumbTrail', () => {
   it('should fork and trace with self logging callback', () => {
     const traceLog: Array<IBreadCrumbTrace> = [];
     const firstCrumb = HanselGretelBreadCrumbTrail.addCrumb(
+      emitConsoleOnAdd,
       traceLog,
       'HanselGretelBreadCrumbTrail.spec.ts'
     );
@@ -127,5 +132,32 @@ describe('HanselGretelBreadCrumbTrail', () => {
         functionArgs: [newTraceCompleted],
       })
     );
+  });
+  it('should console log if enabled', () => {
+    const traceLog: Array<IBreadCrumbTrace> = [];
+    const originalConsoleLog = console.log;
+    let logCount = 0;
+    const logFunc = (...args: unknown[]) => {
+      logCount++;
+      //originalConsoleLog(args);
+    };
+    console.log = logFunc;
+    let emit = false;
+    HanselGretelBreadCrumbTrail.addCrumb(
+      emit,
+      traceLog,
+      'HanselGretelBreadCrumbTrail.spec.ts'
+    );
+    //expect console.log not to have been called
+    expect(logCount).toBe(0);
+    emit = true;
+    HanselGretelBreadCrumbTrail.addCrumb(
+      emit,
+      traceLog,
+      'HanselGretelBreadCrumbTrail.spec.ts'
+    );
+    // expect console.log to have been called
+    expect(logCount).toBe(1);
+    console.log = originalConsoleLog;
   });
 });
