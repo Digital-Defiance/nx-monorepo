@@ -33,14 +33,14 @@ const bob = BrightChainMember.newMember(
 );
 pTrace.addCrumb('bob created', bob);
 
-const blockTrace = pTrace.forkAndAddCrumbWithCallback(
-  'describe block',
-  (): HanselGretelBreadCrumbTrail => {
-    describe('block', () => {
-      it('should create a block', () => {
-        blockTrace.forkAndAddCrumbWithCallback(
-          'it should create a block',
-          (result: HanselGretelBreadCrumbTrail) => {
+describe('block', () => {
+  const blockTrace = pTrace.forkAndAddCrumbWithCallback(
+    'describe block',
+    (): HanselGretelBreadCrumbTrail => {
+      blockTrace.forkAndAddCrumbWithCallback(
+        'it should create a block',
+        (result: HanselGretelBreadCrumbTrail) => {
+          it('should create a block', () => {
             const blockSize = randomBlockSize();
             const data = randomBytes(blockSizeToLength(blockSize));
             const checksum = StaticHelpersChecksum.calculateChecksum(
@@ -59,14 +59,14 @@ const blockTrace = pTrace.forkAndAddCrumbWithCallback(
               StaticHelpers.Uint8ArrayToUuidV4(alice.id)
             );
             expect(block.dateCreated).toEqual(dateCreated);
-            return result.addCrumb('returning from test');
-          }
-        );
-      });
-      it('should convert a block to json and back', () => {
-        blockTrace.forkAndAddCrumbWithCallback(
-          'it should convert a block to json and back',
-          (result: HanselGretelBreadCrumbTrail) => {
+          });
+          return result.addCrumb('returning from test');
+        }
+      );
+      blockTrace.forkAndAddCrumbWithCallback(
+        'it should convert a block to json and back',
+        (result: HanselGretelBreadCrumbTrail) => {
+          it('should convert a block to json and back', () => {
             const blockSize = randomBlockSize();
             const data = randomBytes(blockSizeToLength(blockSize));
             const checksum = StaticHelpersChecksum.calculateChecksum(
@@ -90,14 +90,14 @@ const blockTrace = pTrace.forkAndAddCrumbWithCallback(
             expect(rebuiltBlock.createdBy).toEqual(block.createdBy);
             expect(rebuiltBlock.createdById).toEqual(block.createdById);
             expect(rebuiltBlock.dateCreated).toEqual(block.dateCreated);
-            return result.addCrumb('returning from test');
-          }
-        );
-      });
-      it('should convert a block to json and fail to convert back with a bad member source', () => {
-        blockTrace.forkAndAddCrumbWithCallback(
-          'it should convert a block to json and fail to convert back with a bad member source',
-          (result: HanselGretelBreadCrumbTrail) => {
+          });
+          return result.addCrumb('returning from test');
+        }
+      );
+      blockTrace.forkAndAddCrumbWithCallback(
+        'it should convert a block to json and fail to convert back with a bad member source',
+        (result: HanselGretelBreadCrumbTrail) => {
+          it('should convert a block to json and fail to convert back with a bad member source', () => {
             const blockSize = randomBlockSize();
             const data = randomBytes(blockSizeToLength(blockSize));
             const checksum = StaticHelpersChecksum.calculateChecksum(
@@ -112,14 +112,14 @@ const blockTrace = pTrace.forkAndAddCrumbWithCallback(
             expect(() =>
               Block.fromJSON(json, (memberId: Uint8Array) => bob)
             ).toThrow('Member mismatch');
-            return result.addCrumb('returning from test');
-          }
-        );
-      });
-      it('should throw when given a bad checksum', () => {
-        blockTrace.forkAndAddCrumbWithCallback(
-          'it should throw when given a bad checksum',
-          (result: HanselGretelBreadCrumbTrail) => {
+          });
+          return result.addCrumb('returning from test');
+        }
+      );
+      blockTrace.forkAndAddCrumbWithCallback(
+        'it should throw when given a bad checksum',
+        (result: HanselGretelBreadCrumbTrail) => {
+          it('should throw when given a bad checksum', () => {
             const blockSize = randomBlockSize();
             const data = randomBytes(blockSizeToLength(blockSize));
             const dateCreated = new Date();
@@ -133,41 +133,41 @@ const blockTrace = pTrace.forkAndAddCrumbWithCallback(
             expect(
               () => new Block(alice, data, dateCreated, badChecksum)
             ).toThrow('Checksum mismatch');
-            return result.addCrumb('returning from test');
-          }
-        );
-      });
-      it('should throw when making an empty block', () => {
-        blockTrace.forkAndAddCrumbWithCallback(
-          'it should throw when making an empty block',
-          (result: HanselGretelBreadCrumbTrail) => {
+          });
+          return result.addCrumb('returning from test');
+        }
+      );
+      blockTrace.forkAndAddCrumbWithCallback(
+        'it should throw when making an empty block',
+        (result: HanselGretelBreadCrumbTrail) => {
+          it('should throw when making an empty block', () => {
             const data = Buffer.from(new Uint8Array());
             const dateCreated = new Date();
             expect(() => new Block(alice, data, dateCreated)).toThrow(
               `Data length ${data.length} is not a valid block size`
             );
-            return result.addCrumb('returning from test');
-          }
-        );
-      });
-      it('should throw when making a block of a bad size', () => {
-        blockTrace.forkAndAddCrumbWithCallback(
-          'it should throw when making a block of a bad size',
-          (result: HanselGretelBreadCrumbTrail) => {
+          });
+          return result.addCrumb('returning from test');
+        }
+      );
+      blockTrace.forkAndAddCrumbWithCallback(
+        'it should throw when making a block of a bad size',
+        (result: HanselGretelBreadCrumbTrail) => {
+          it('should throw when making a block of a bad size', () => {
             const blockSize = randomBlockSize();
             const data = randomBytes(blockSizeToLength(blockSize) + 1);
             const dateCreated = new Date();
             expect(() => new Block(alice, data, dateCreated)).toThrow(
               `Data length ${data.length} is not a valid block size`
             );
-            return result.addCrumb('returning from test');
-          }
-        );
-      });
-      it('should make dateCreated valus when not provided', () => {
-        blockTrace.forkAndAddCrumbWithCallback(
-          'it should make dateCreated valus when not provided',
-          (result: HanselGretelBreadCrumbTrail) => {
+          });
+          return result.addCrumb('returning from test');
+        }
+      );
+      blockTrace.forkAndAddCrumbWithCallback(
+        'it should make dateCreated valus when not provided',
+        (result: HanselGretelBreadCrumbTrail) => {
+          it('should make dateCreated valus when not provided', () => {
             const blockSize = randomBlockSize();
             const data = randomBytes(blockSizeToLength(blockSize));
             const checksum = StaticHelpersChecksum.calculateChecksum(
@@ -184,14 +184,14 @@ const blockTrace = pTrace.forkAndAddCrumbWithCallback(
             );
             expect(delta).toBeLessThan(1000);
             expect(delta).toBeGreaterThanOrEqual(0);
-            return result.addCrumb('returning from test');
-          }
-        );
-      });
-      it('should not xor with different block sizes', () => {
-        blockTrace.forkAndAddCrumbWithCallback(
-          'it should not xor with different block sizes',
-          (result: HanselGretelBreadCrumbTrail) => {
+          });
+          return result.addCrumb('returning from test');
+        }
+      );
+      blockTrace.forkAndAddCrumbWithCallback(
+        'it should not xor with different block sizes',
+        (result: HanselGretelBreadCrumbTrail) => {
+          it('should not xor with different block sizes', () => {
             const blockA = new Block(
               alice,
               randomBytes(BlockSize.Tiny),
@@ -207,14 +207,14 @@ const blockTrace = pTrace.forkAndAddCrumbWithCallback(
             expect(() => blockA.xor(blockB, alice)).toThrow(
               'Block sizes do not match'
             );
-            return result.addCrumb('returning from test');
-          }
-        );
-      });
-      it('should xor with same block sizes', () => {
-        blockTrace.forkAndAddCrumbWithCallback(
-          'it should xor with same block sizes',
-          (result: HanselGretelBreadCrumbTrail) => {
+          });
+          return result.addCrumb('returning from test');
+        }
+      );
+      blockTrace.forkAndAddCrumbWithCallback(
+        'it should xor with same block sizes',
+        (result: HanselGretelBreadCrumbTrail) => {
+          it('should xor with same block sizes', () => {
             const blockLength: number = BlockSize.Nano;
             const blockA = new Block(
               alice,
@@ -239,17 +239,17 @@ const blockTrace = pTrace.forkAndAddCrumbWithCallback(
             expect(blockC.id).toEqual(
               Buffer.from(StaticHelpersChecksum.calculateChecksum(expectedData))
             );
-            return result.addCrumb('returning from test');
-          }
-        );
-      });
-    });
-    return pTrace.addCrumbWithCallback(
-      (result: HanselGretelBreadCrumbTrail) => {
-        console.log(traceLog);
-        return result;
-      },
-      'returning from all tests'
-    );
-  }
-);
+          });
+          return result.addCrumb('returning from test');
+        }
+      );
+      return pTrace.addCrumbWithCallback(
+        (result: HanselGretelBreadCrumbTrail) => {
+          console.log(traceLog);
+          return result;
+        },
+        'returning from all tests'
+      );
+    }
+  );
+});
