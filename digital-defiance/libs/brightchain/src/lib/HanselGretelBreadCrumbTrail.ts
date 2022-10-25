@@ -27,11 +27,6 @@ export class HanselGretelBreadCrumbTrail implements IBreadCrumbTrace {
       functionArgs: this.functionArgs,
     } as IBreadCrumbTrace;
   }
-  public addCrumbWithSelfLoggingCallback(doCallback: (crumbResult: HanselGretelBreadCrumbTrail) => void, ...args: Array<any>): HanselGretelBreadCrumbTrail {
-    const newCrumb = this.addCrumb(...args);
-    doCallback(newCrumb);
-    return newCrumb;
-  }
   public static addCrumb(
     traceLog: Array<IBreadCrumbTrace>,
     functionName: string,
@@ -55,6 +50,14 @@ export class HanselGretelBreadCrumbTrail implements IBreadCrumbTrace {
       [this.functionName, functionName].join('>'),
       ...args
     );
+  }
+  public addCrumbWithCallback(doCallback: (crumbResult: HanselGretelBreadCrumbTrail) => HanselGretelBreadCrumbTrail, ...args: Array<any>): HanselGretelBreadCrumbTrail {
+    const newCrumb = this.addCrumb(...args);
+    return doCallback(newCrumb);
+  }
+  public forkAndAddCrumbWithCallback(functionName: string, doCallback: (crumbResult: HanselGretelBreadCrumbTrail) => HanselGretelBreadCrumbTrail, ...args: Array<any>): HanselGretelBreadCrumbTrail {
+    const newCrumb = this.forkAndAddCrumb(functionName, ...args);
+    return doCallback(newCrumb);
   }
   public static IBreadCrumbTrace(trace: IBreadCrumbTrace): IBreadCrumbTrace {
     return trace;

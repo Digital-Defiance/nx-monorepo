@@ -71,28 +71,61 @@ describe('HanselGretelBreadCrumbTrail', () => {
     );
     const newTrace = 'trace 1';
     const newTraceCompleted = `${newTrace} callback completed`;
-    const secondCrumb = firstCrumb.addCrumbWithSelfLoggingCallback(
+    const secondCrumb = firstCrumb.addCrumbWithCallback((crumbResult) => {
+      expect(crumbResult.IBreadCrumbTrace).toEqual(
+        HanselGretelBreadCrumbTrail.IBreadCrumbTrace({
+          date: crumbResult.date,
+          functionName: 'HanselGretelBreadCrumbTrail.spec.ts',
+          functionArgs: [newTrace],
+        })
+      );
+      return crumbResult.addCrumb(newTraceCompleted);
+    }, newTrace);
+    expect(secondCrumb.IBreadCrumbTrace).toEqual(
+      HanselGretelBreadCrumbTrail.IBreadCrumbTrace({
+        date: secondCrumb.date,
+        functionName: 'HanselGretelBreadCrumbTrail.spec.ts',
+        functionArgs: [newTraceCompleted],
+      })
+    );
+  });
+  it('should fork and trace with self logging callback', () => {
+    const traceLog: Array<IBreadCrumbTrace> = [];
+    const firstCrumb = HanselGretelBreadCrumbTrail.addCrumb(
+      traceLog,
+      'HanselGretelBreadCrumbTrail.spec.ts'
+    );
+    expect(firstCrumb.date).toBeDefined();
+    expect(firstCrumb.IBreadCrumbTrace).toEqual(
+      HanselGretelBreadCrumbTrail.IBreadCrumbTrace({
+        date: firstCrumb.date,
+        functionName: 'HanselGretelBreadCrumbTrail.spec.ts',
+        functionArgs: [],
+      })
+    );
+    const newSection = 'section 1';
+    const newTrace = 'trace 1';
+    const newTraceCompleted = `${newTrace} callback completed`;
+    const secondCrumb = firstCrumb.forkAndAddCrumbWithCallback(
+      newSection,
       (crumbResult) => {
         expect(crumbResult.IBreadCrumbTrace).toEqual(
           HanselGretelBreadCrumbTrail.IBreadCrumbTrace({
             date: crumbResult.date,
-            functionName: 'HanselGretelBreadCrumbTrail.spec.ts',
+            functionName: 'HanselGretelBreadCrumbTrail.spec.ts>section 1',
             functionArgs: [newTrace],
           })
         );
-        crumbResult.addCrumb(newTraceCompleted);
+        return crumbResult.addCrumb(newTraceCompleted);
       },
       newTrace
     );
     expect(secondCrumb.IBreadCrumbTrace).toEqual(
       HanselGretelBreadCrumbTrail.IBreadCrumbTrace({
         date: secondCrumb.date,
-        functionName: 'HanselGretelBreadCrumbTrail.spec.ts',
-        functionArgs: [newTrace],
+        functionName: 'HanselGretelBreadCrumbTrail.spec.ts>section 1',
+        functionArgs: [newTraceCompleted],
       })
     );
-    expect(traceLog[traceLog.length - 1].functionArgs).toEqual([
-      newTraceCompleted,
-    ]);
   });
 });
