@@ -34,10 +34,10 @@ const bob = BrightChainMember.newMember(
 pTrace.addCrumb('bob created', bob);
 
 describe('block', () => {
-  const blockTrace = pTrace.forkAndAddCrumbWithCallback(
+  pTrace.forkAndAddCrumbWithCallback(
     'describe block',
-    (): HanselGretelBreadCrumbTrail => {
-      blockTrace.forkAndAddCrumbWithCallback(
+    (result: HanselGretelBreadCrumbTrail): HanselGretelBreadCrumbTrail => {
+      result.forkAndAddCrumbWithCallback(
         'it should create a block',
         (result: HanselGretelBreadCrumbTrail) => {
           it('should create a block', () => {
