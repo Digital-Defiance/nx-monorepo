@@ -63,7 +63,7 @@ describe('block', () => {
           return result.addCrumb('returning from test');
         }
       );
-      blockTrace.forkAndAddCrumbWithCallback(
+      result.forkAndAddCrumbWithCallback(
         'it should convert a block to json and back',
         (result: HanselGretelBreadCrumbTrail) => {
           it('should convert a block to json and back', () => {
@@ -94,7 +94,7 @@ describe('block', () => {
           return result.addCrumb('returning from test');
         }
       );
-      blockTrace.forkAndAddCrumbWithCallback(
+      result.forkAndAddCrumbWithCallback(
         'it should convert a block to json and fail to convert back with a bad member source',
         (result: HanselGretelBreadCrumbTrail) => {
           it('should convert a block to json and fail to convert back with a bad member source', () => {
@@ -116,7 +116,7 @@ describe('block', () => {
           return result.addCrumb('returning from test');
         }
       );
-      blockTrace.forkAndAddCrumbWithCallback(
+      result.forkAndAddCrumbWithCallback(
         'it should throw when given a bad checksum',
         (result: HanselGretelBreadCrumbTrail) => {
           it('should throw when given a bad checksum', () => {
@@ -137,7 +137,7 @@ describe('block', () => {
           return result.addCrumb('returning from test');
         }
       );
-      blockTrace.forkAndAddCrumbWithCallback(
+      result.forkAndAddCrumbWithCallback(
         'it should throw when making an empty block',
         (result: HanselGretelBreadCrumbTrail) => {
           it('should throw when making an empty block', () => {
@@ -150,7 +150,7 @@ describe('block', () => {
           return result.addCrumb('returning from test');
         }
       );
-      blockTrace.forkAndAddCrumbWithCallback(
+      result.forkAndAddCrumbWithCallback(
         'it should throw when making a block of a bad size',
         (result: HanselGretelBreadCrumbTrail) => {
           it('should throw when making a block of a bad size', () => {
@@ -164,7 +164,7 @@ describe('block', () => {
           return result.addCrumb('returning from test');
         }
       );
-      blockTrace.forkAndAddCrumbWithCallback(
+      result.forkAndAddCrumbWithCallback(
         'it should make dateCreated valus when not provided',
         (result: HanselGretelBreadCrumbTrail) => {
           it('should make dateCreated valus when not provided', () => {
@@ -188,7 +188,7 @@ describe('block', () => {
           return result.addCrumb('returning from test');
         }
       );
-      blockTrace.forkAndAddCrumbWithCallback(
+      result.forkAndAddCrumbWithCallback(
         'it should not xor with different block sizes',
         (result: HanselGretelBreadCrumbTrail) => {
           it('should not xor with different block sizes', () => {
@@ -211,7 +211,7 @@ describe('block', () => {
           return result.addCrumb('returning from test');
         }
       );
-      blockTrace.forkAndAddCrumbWithCallback(
+      result.forkAndAddCrumbWithCallback(
         'it should xor with same block sizes',
         (result: HanselGretelBreadCrumbTrail) => {
           it('should xor with same block sizes', () => {
