@@ -6,37 +6,12 @@ import StaticHelpersChecksum from '../staticHelpers.checksum';
 import Block from './block';
 import BlockSize, { blockSizeToLength, blockSizes } from './blockSizes';
 
-const traceLog: Array<TraceBreadCrumb> = [];
-class TraceBreadCrumb {
-  public readonly date: Date;
-  public readonly functionName: string;
-  public readonly functionArgs: Array<any>;
-  constructor(functionName: string, ...args: Array<any>) {
-    this.date = new Date();
-    this.functionName = functionName;
-    this.functionArgs = args;
-    traceLog.push(this);
-  }
-  public static trace(
-    functionName: string,
-    ...args: Array<any>
-  ): TraceBreadCrumb {
-    return new TraceBreadCrumb(functionName, ...args);
-  }
-  public trace(...args: Array<any>): TraceBreadCrumb {
-    return new TraceBreadCrumb(this.functionName, ...args);
-  }
-  public deeperTrace(
-    functionName: string,
-    ...args: Array<any>
-  ): TraceBreadCrumb {
-    return new TraceBreadCrumb(
-      [this.functionName, functionName].join('>'),
-      ...args
-    );
-  }
-}
-const pTrace = TraceBreadCrumb.trace('block.spec.ts');
+import {
+  IBreadCrumbTrace,
+  HanselGretelBreadCrumbTrail,
+} from '../HanselGretelBreadCrumbTrail';
+const traceLog: Array<IBreadCrumbTrace> = [];
+const pTrace = HanselGretelBreadCrumbTrail.trace(traceLog, 'block.spec.ts');
 
 function randomBlockSize(): BlockSize {
   pTrace.deeperTrace('randomBlockSize');
