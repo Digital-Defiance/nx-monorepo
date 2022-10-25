@@ -10,22 +10,22 @@ describe('HanselGretelBreadCrumbTrail', () => {
       'HanselGretelBreadCrumbTrail.spec.ts'
     );
     expect(firstCrumb.date).toBeDefined();
-    expect(firstCrumb.IBreadCrumbTrace).toBe(
+    expect(firstCrumb.IBreadCrumbTrace).toEqual(
       HanselGretelBreadCrumbTrail.IBreadCrumbTrace({
         date: firstCrumb.date,
         functionName: 'HanselGretelBreadCrumbTrail.spec.ts',
         functionArgs: [],
       })
     );
-    const result = firstCrumb.addCrumb('trace 1');
-    expect(result.IBreadCrumbTrace).toBe(
+    const secondCrumb = firstCrumb.addCrumb('trace 1');
+    expect(secondCrumb.IBreadCrumbTrace).toEqual(
       HanselGretelBreadCrumbTrail.IBreadCrumbTrace({
-        date: firstCrumb.date,
+        date: secondCrumb.date,
         functionName: 'HanselGretelBreadCrumbTrail.spec.ts',
         functionArgs: ['trace 1'],
       })
     );
-    expect(result.date.getUTCMilliseconds()).toBeGreaterThanOrEqual(
+    expect(secondCrumb.date.getUTCMilliseconds()).toBeGreaterThanOrEqual(
       firstCrumb.date.getUTCMilliseconds()
     );
   });
@@ -36,22 +36,22 @@ describe('HanselGretelBreadCrumbTrail', () => {
       'HanselGretelBreadCrumbTrail.spec.ts'
     );
     expect(firstCrumb.date).toBeDefined();
-    expect(firstCrumb.IBreadCrumbTrace).toBe(
+    expect(firstCrumb.IBreadCrumbTrace).toEqual(
       HanselGretelBreadCrumbTrail.IBreadCrumbTrace({
         date: firstCrumb.date,
         functionName: 'HanselGretelBreadCrumbTrail.spec.ts',
         functionArgs: [],
       })
     );
-    const deeperCrumb = firstCrumb.forkAndAddCrumb('trace 1', 'trace 2');
-    expect(deeperCrumb.IBreadCrumbTrace).toBe(
+    const forkedCrumb = firstCrumb.forkAndAddCrumb('trace 1', 'trace 2');
+    expect(forkedCrumb.IBreadCrumbTrace).toEqual(
       HanselGretelBreadCrumbTrail.IBreadCrumbTrace({
-        date: deeperCrumb.date,
+        date: forkedCrumb.date,
         functionName: 'HanselGretelBreadCrumbTrail.spec.ts>trace 1',
         functionArgs: ['trace 2'],
       })
     );
-    expect(deeperCrumb.date.getUTCMilliseconds()).toBeGreaterThanOrEqual(
+    expect(forkedCrumb.date.getUTCMilliseconds()).toBeGreaterThanOrEqual(
       firstCrumb.date.getUTCMilliseconds()
     );
   });
