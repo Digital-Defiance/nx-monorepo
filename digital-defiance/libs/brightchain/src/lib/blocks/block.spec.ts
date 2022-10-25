@@ -11,10 +11,10 @@ import {
   HanselGretelBreadCrumbTrail,
 } from '../HanselGretelBreadCrumbTrail';
 const traceLog: Array<IBreadCrumbTrace> = [];
-const pTrace = HanselGretelBreadCrumbTrail.trace(traceLog, 'block.spec.ts');
+const pTrace = HanselGretelBreadCrumbTrail.addCrumb(traceLog, 'block.spec.ts');
 
 function randomBlockSize(): BlockSize {
-  pTrace.deeperTrace('randomBlockSize');
+  pTrace.forkAndAddCrumb('randomBlockSize');
   // need to skip unknown block size
   const blockIndex = 1 + Math.floor(Math.random() * (blockSizes.length - 1));
   return blockSizes[blockIndex];
@@ -25,24 +25,24 @@ const alice = BrightChainMember.newMember(
   'alice',
   'alice@example.com'
 );
-pTrace.trace('alice created', alice);
+pTrace.addCrumb('alice created', alice);
 const bob = BrightChainMember.newMember(
   BrightChainMemberType.User,
   'bob',
   'bob@example.com'
 );
-pTrace.trace('bob created', bob);
+pTrace.addCrumb('bob created', bob);
 
 describe('block', () => {
-  const blockTrace = pTrace.deeperTrace('describe block');
+  const blockTrace = pTrace.forkAndAddCrumb('describe block');
   it('should create a block', () => {
-    const itTrace = blockTrace.deeperTrace('it should create a block');
+    const itTrace = blockTrace.forkAndAddCrumb('it should create a block');
     const blockSize = randomBlockSize();
     const data = randomBytes(blockSizeToLength(blockSize));
     const checksum = StaticHelpersChecksum.calculateChecksum(Buffer.from(data));
     const dateCreated = new Date();
     const block = new Block(alice, data, dateCreated);
-    itTrace.trace('block created');
+    itTrace.addCrumb('block created');
     expect(block).toBeTruthy();
     expect(block.blockSize).toBe(blockSize);
     expect(block.data).toEqual(data);
@@ -53,10 +53,10 @@ describe('block', () => {
       StaticHelpers.Uint8ArrayToUuidV4(alice.id)
     );
     expect(block.dateCreated).toEqual(dateCreated);
-    itTrace.trace('returning from test');
+    itTrace.addCrumb('returning from test');
   });
   it('should convert a block to json and back', () => {
-    const itTrace = blockTrace.deeperTrace(
+    const itTrace = blockTrace.forkAndAddCrumb(
       'it should convert a block to json and back'
     );
     const blockSize = randomBlockSize();
@@ -64,12 +64,12 @@ describe('block', () => {
     const checksum = StaticHelpersChecksum.calculateChecksum(Buffer.from(data));
     const dateCreated = new Date();
     const block = new Block(alice, data, dateCreated, checksum);
-    itTrace.trace('block created');
+    itTrace.addCrumb('block created');
     const json = block.toJSON();
-    itTrace.trace('block converted to json');
+    itTrace.addCrumb('block converted to json');
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const rebuiltBlock = Block.fromJSON(json, (memberId: Uint8Array) => alice);
-    itTrace.trace('block rebuilt from json');
+    itTrace.addCrumb('block rebuilt from json');
     expect(rebuiltBlock).toBeTruthy();
     expect(rebuiltBlock.blockSize).toBe(block.blockSize);
     expect(rebuiltBlock.data).toEqual(block.data);
@@ -77,10 +77,10 @@ describe('block', () => {
     expect(rebuiltBlock.createdBy).toEqual(block.createdBy);
     expect(rebuiltBlock.createdById).toEqual(block.createdById);
     expect(rebuiltBlock.dateCreated).toEqual(block.dateCreated);
-    itTrace.trace('returning from test');
+    itTrace.addCrumb('returning from test');
   });
   it('should convert a block to json and fail to convert back with a bad member source', () => {
-    const itTrace = blockTrace.deeperTrace(
+    const itTrace = blockTrace.forkAndAddCrumb(
       'it should convert a block to json and fail to convert back with a bad member source'
     );
     const blockSize = randomBlockSize();
@@ -88,17 +88,17 @@ describe('block', () => {
     const checksum = StaticHelpersChecksum.calculateChecksum(Buffer.from(data));
     const dateCreated = new Date();
     const block = new Block(alice, data, dateCreated, checksum);
-    itTrace.trace('block created');
+    itTrace.addCrumb('block created');
     const json = block.toJSON();
-    itTrace.trace('block converted to json');
+    itTrace.addCrumb('block converted to json');
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     expect(() => Block.fromJSON(json, (memberId: Uint8Array) => bob)).toThrow(
       'Member mismatch'
     );
-    itTrace.trace('returning from test');
+    itTrace.addCrumb('returning from test');
   });
   it('should throw when given a bad checksum', () => {
-    const itTrace = blockTrace.deeperTrace(
+    const itTrace = blockTrace.forkAndAddCrumb(
       'it should throw when given a bad checksum'
     );
     const blockSize = randomBlockSize();
@@ -108,16 +108,16 @@ describe('block', () => {
     const badChecksum = StaticHelpersChecksum.calculateChecksum(
       Buffer.from(badData)
     );
-    itTrace.trace(
+    itTrace.addCrumb(
       'block data generated, creating block with checksum mismatch'
     );
     expect(() => new Block(alice, data, dateCreated, badChecksum)).toThrow(
       'Checksum mismatch'
     );
-    itTrace.trace('returning from test');
+    itTrace.addCrumb('returning from test');
   });
   it('should throw when making an empty block', () => {
-    const itTrace = blockTrace.deeperTrace(
+    const itTrace = blockTrace.forkAndAddCrumb(
       'it should throw when making an empty block'
     );
     const data = Buffer.from(new Uint8Array());
@@ -125,10 +125,10 @@ describe('block', () => {
     expect(() => new Block(alice, data, dateCreated)).toThrow(
       `Data length ${data.length} is not a valid block size`
     );
-    itTrace.trace('returning from test');
+    itTrace.addCrumb('returning from test');
   });
   it('should throw when making a block of a bad size', () => {
-    const itTrace = blockTrace.deeperTrace(
+    const itTrace = blockTrace.forkAndAddCrumb(
       'it should throw when making a block of a bad size'
     );
     const blockSize = randomBlockSize();
@@ -137,10 +137,10 @@ describe('block', () => {
     expect(() => new Block(alice, data, dateCreated)).toThrow(
       `Data length ${data.length} is not a valid block size`
     );
-    itTrace.trace('returning from test');
+    itTrace.addCrumb('returning from test');
   });
   it('should make dateCreated valus when not provided', () => {
-    const itTrace = blockTrace.deeperTrace(
+    const itTrace = blockTrace.forkAndAddCrumb(
       'it should make dateCreated valus when not provided'
     );
     const blockSize = randomBlockSize();
@@ -148,37 +148,37 @@ describe('block', () => {
     const checksum = StaticHelpersChecksum.calculateChecksum(Buffer.from(data));
     const dateCreated = new Date();
     const block = new Block(alice, data, undefined, checksum);
-    itTrace.trace('block created');
+    itTrace.addCrumb('block created');
     expect(block.dateCreated).toBeTruthy();
     expect(block.dateCreated).toBeInstanceOf(Date);
     // the difference between the dateCreated call and the block dateCreated should be far less than 1 second
     const delta = Math.abs(block.dateCreated.getTime() - dateCreated.getTime());
     expect(delta).toBeLessThan(1000);
     expect(delta).toBeGreaterThanOrEqual(0);
-    itTrace.trace('returning from test');
+    itTrace.addCrumb('returning from test');
   });
   it('should not xor with different block sizes', () => {
-    const itTrace = blockTrace.deeperTrace(
+    const itTrace = blockTrace.forkAndAddCrumb(
       'it should not xor with different block sizes'
     );
     const blockA = new Block(alice, randomBytes(BlockSize.Tiny), new Date());
-    itTrace.trace('blockA created');
+    itTrace.addCrumb('blockA created');
     const blockB = new Block(alice, randomBytes(BlockSize.Nano), new Date());
-    itTrace.trace('blockB created');
+    itTrace.addCrumb('blockB created');
     expect(() => blockA.xor(blockB, alice)).toThrow('Block sizes do not match');
-    itTrace.trace('returning from test');
+    itTrace.addCrumb('returning from test');
   });
   it('should xor with same block sizes', () => {
-    const itTrace = blockTrace.deeperTrace(
+    const itTrace = blockTrace.forkAndAddCrumb(
       'it should xor with same block sizes'
     );
     const blockLength: number = BlockSize.Nano;
     const blockA = new Block(alice, randomBytes(blockLength), new Date());
-    itTrace.trace('blockA created');
+    itTrace.addCrumb('blockA created');
     const blockB = new Block(alice, randomBytes(blockLength), new Date());
-    itTrace.trace('blockB created');
+    itTrace.addCrumb('blockB created');
     const blockC = blockA.xor(blockB, alice);
-    itTrace.trace('blockC created');
+    itTrace.addCrumb('blockC created');
     const expectedData = Buffer.alloc(blockLength);
     for (let i = 0; i < blockLength; i++) {
       expectedData[i] = blockA.data[i] ^ blockB.data[i];
@@ -188,10 +188,10 @@ describe('block', () => {
     expect(blockC.id).toEqual(
       Buffer.from(StaticHelpersChecksum.calculateChecksum(expectedData))
     );
-    itTrace.trace('returning from test');
+    itTrace.addCrumb('returning from test');
   });
-  pTrace.trace('returning from all tests');
+  pTrace.addCrumb('returning from all tests');
   console.log(traceLog);
 });
-pTrace.trace('returned');
+pTrace.addCrumb('returned');
 console.log(traceLog[traceLog.length - 1]);

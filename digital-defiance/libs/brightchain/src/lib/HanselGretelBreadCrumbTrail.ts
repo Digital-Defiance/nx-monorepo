@@ -18,23 +18,30 @@ export class HanselGretelBreadCrumbTrail implements IBreadCrumbTrace {
     this.functionName = functionName;
     this.functionArgs = args;
     this.traceLog = traceLog;
-    this.traceLog.push(this);
+    traceLog.push(this.IBreadCrumbTrace);
   }
-  public static trace(
+  public get IBreadCrumbTrace(): IBreadCrumbTrace {
+    return {
+      date: this.date,
+      functionName: this.functionName,
+      functionArgs: this.functionArgs,
+    } as IBreadCrumbTrace;
+  }
+  public static addCrumb(
     traceLog: Array<IBreadCrumbTrace>,
     functionName: string,
     ...args: Array<any>
   ): HanselGretelBreadCrumbTrail {
     return new HanselGretelBreadCrumbTrail(traceLog, functionName, ...args);
   }
-  public trace(...args: Array<any>): HanselGretelBreadCrumbTrail {
+  public addCrumb(...args: Array<any>): HanselGretelBreadCrumbTrail {
     return new HanselGretelBreadCrumbTrail(
       this.traceLog,
       this.functionName,
       ...args
     );
   }
-  public deeperTrace(
+  public forkAndAddCrumb(
     functionName: string,
     ...args: Array<any>
   ): HanselGretelBreadCrumbTrail {
@@ -43,5 +50,8 @@ export class HanselGretelBreadCrumbTrail implements IBreadCrumbTrace {
       [this.functionName, functionName].join('>'),
       ...args
     );
+  }
+  public static IBreadCrumbTrace(trace: IBreadCrumbTrace): IBreadCrumbTrace {
+    return trace;
   }
 }
