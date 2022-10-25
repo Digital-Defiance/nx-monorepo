@@ -18,7 +18,11 @@ export class HanselGretelBreadCrumbTrail implements IBreadCrumbTrace {
     this.functionName = functionName;
     this.functionArgs = args;
     this.traceLog = traceLog;
-    traceLog.push(this.IBreadCrumbTrace);
+    this.addLogEntry();
+  }
+  private addLogEntry() {
+    // give a nice place to add your debug statement below:
+    this.traceLog.push(this.IBreadCrumbTrace);
   }
   public get IBreadCrumbTrace(): IBreadCrumbTrace {
     return {
@@ -51,11 +55,22 @@ export class HanselGretelBreadCrumbTrail implements IBreadCrumbTrace {
       ...args
     );
   }
-  public addCrumbWithCallback(doCallback: (crumbResult: HanselGretelBreadCrumbTrail) => HanselGretelBreadCrumbTrail, ...args: Array<any>): HanselGretelBreadCrumbTrail {
+  public addCrumbWithCallback(
+    doCallback: (
+      crumbResult: HanselGretelBreadCrumbTrail
+    ) => HanselGretelBreadCrumbTrail,
+    ...args: Array<any>
+  ): HanselGretelBreadCrumbTrail {
     const newCrumb = this.addCrumb(...args);
     return doCallback(newCrumb);
   }
-  public forkAndAddCrumbWithCallback(functionName: string, doCallback: (crumbResult: HanselGretelBreadCrumbTrail) => HanselGretelBreadCrumbTrail, ...args: Array<any>): HanselGretelBreadCrumbTrail {
+  public forkAndAddCrumbWithCallback(
+    functionName: string,
+    doCallback: (
+      crumbResult: HanselGretelBreadCrumbTrail
+    ) => HanselGretelBreadCrumbTrail,
+    ...args: Array<any>
+  ): HanselGretelBreadCrumbTrail {
     const newCrumb = this.forkAndAddCrumb(functionName, ...args);
     return doCallback(newCrumb);
   }
