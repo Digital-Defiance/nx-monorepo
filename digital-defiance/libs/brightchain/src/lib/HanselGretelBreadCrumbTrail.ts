@@ -27,6 +27,11 @@ export class HanselGretelBreadCrumbTrail implements IBreadCrumbTrace {
       functionArgs: this.functionArgs,
     } as IBreadCrumbTrace;
   }
+  public addCrumbWithSelfLoggingCallback(doCallback: (crumbResult: HanselGretelBreadCrumbTrail) => void, ...args: Array<any>): HanselGretelBreadCrumbTrail {
+    const newCrumb = this.addCrumb(...args);
+    doCallback(newCrumb);
+    return newCrumb;
+  }
   public static addCrumb(
     traceLog: Array<IBreadCrumbTrace>,
     functionName: string,

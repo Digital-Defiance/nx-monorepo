@@ -55,4 +55,44 @@ describe('HanselGretelBreadCrumbTrail', () => {
       firstCrumb.date.getUTCMilliseconds()
     );
   });
+  it('should trace with self logging callback', () => {
+    const traceLog: Array<IBreadCrumbTrace> = [];
+    const firstCrumb = HanselGretelBreadCrumbTrail.addCrumb(
+      traceLog,
+      'HanselGretelBreadCrumbTrail.spec.ts'
+    );
+    expect(firstCrumb.date).toBeDefined();
+    expect(firstCrumb.IBreadCrumbTrace).toEqual(
+      HanselGretelBreadCrumbTrail.IBreadCrumbTrace({
+        date: firstCrumb.date,
+        functionName: 'HanselGretelBreadCrumbTrail.spec.ts',
+        functionArgs: [],
+      })
+    );
+    const newTrace = 'trace 1';
+    const newTraceCompleted = `${newTrace} callback completed`;
+    const secondCrumb = firstCrumb.addCrumbWithSelfLoggingCallback(
+      (crumbResult) => {
+        expect(crumbResult.IBreadCrumbTrace).toEqual(
+          HanselGretelBreadCrumbTrail.IBreadCrumbTrace({
+            date: crumbResult.date,
+            functionName: 'HanselGretelBreadCrumbTrail.spec.ts',
+            functionArgs: [newTrace],
+          })
+        );
+        crumbResult.addCrumb(newTraceCompleted);
+      },
+      newTrace
+    );
+    expect(secondCrumb.IBreadCrumbTrace).toEqual(
+      HanselGretelBreadCrumbTrail.IBreadCrumbTrace({
+        date: secondCrumb.date,
+        functionName: 'HanselGretelBreadCrumbTrail.spec.ts',
+        functionArgs: [newTrace],
+      })
+    );
+    expect(traceLog[traceLog.length - 1].functionArgs).toEqual([
+      newTraceCompleted,
+    ]);
+  });
 });
