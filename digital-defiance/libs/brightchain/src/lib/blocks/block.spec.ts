@@ -60,7 +60,7 @@ pTrace.trace('bob created', bob);
 
 describe('block', () => {
   const blockTrace = pTrace.deeperTrace('describe block');
-  it('should create a block', (done) => {
+  it('should create a block', () => {
     const itTrace = blockTrace.deeperTrace('it should create a block');
     const blockSize = randomBlockSize();
     const data = randomBytes(blockSizeToLength(blockSize));
@@ -80,7 +80,7 @@ describe('block', () => {
     expect(block.dateCreated).toEqual(dateCreated);
     itTrace.trace('returning from test');
   });
-  it('should convert a block to json and back', (done) => {
+  it('should convert a block to json and back', () => {
     const itTrace = blockTrace.deeperTrace(
       'it should convert a block to json and back'
     );
@@ -104,7 +104,7 @@ describe('block', () => {
     expect(rebuiltBlock.dateCreated).toEqual(block.dateCreated);
     itTrace.trace('returning from test');
   });
-  it('should convert a block to json and fail to convert back with a bad member source', (done) => {
+  it('should convert a block to json and fail to convert back with a bad member source', () => {
     const itTrace = blockTrace.deeperTrace(
       'it should convert a block to json and fail to convert back with a bad member source'
     );
@@ -122,7 +122,7 @@ describe('block', () => {
     );
     itTrace.trace('returning from test');
   });
-  it('should throw when given a bad checksum', (done) => {
+  it('should throw when given a bad checksum', () => {
     const itTrace = blockTrace.deeperTrace(
       'it should throw when given a bad checksum'
     );
@@ -141,7 +141,7 @@ describe('block', () => {
     );
     itTrace.trace('returning from test');
   });
-  it('should throw when making an empty block', (done) => {
+  it('should throw when making an empty block', () => {
     const itTrace = blockTrace.deeperTrace(
       'it should throw when making an empty block'
     );
@@ -152,7 +152,7 @@ describe('block', () => {
     );
     itTrace.trace('returning from test');
   });
-  it('should throw when making a block of a bad size', (done) => {
+  it('should throw when making a block of a bad size', () => {
     const itTrace = blockTrace.deeperTrace(
       'it should throw when making a block of a bad size'
     );
