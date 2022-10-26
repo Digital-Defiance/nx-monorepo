@@ -58,9 +58,7 @@ describe('block', () => {
             expect(block.id).toEqual(checksum);
             expect(block.checksumString).toEqual(checksum.toString('hex'));
             expect(block.createdBy).toEqual(alice.id);
-            expect(block.createdById).toEqual(
-              StaticHelpers.Uint8ArrayToUuidV4(alice.id)
-            );
+            expect(block.createdById).toEqual(alice.id.toString(16));
             expect(block.dateCreated).toEqual(dateCreated);
           });
           return result.addCrumb('returning from test');
@@ -75,15 +73,16 @@ describe('block', () => {
             const checksum = StaticHelpersChecksum.calculateChecksum(
               Buffer.from(data)
             );
+            const checksumBigInt = BigInt('0x' + checksum.toString('hex'));
             const dateCreated = new Date();
-            const block = new Block(alice, data, dateCreated, checksum);
+            const block = new Block(alice, data, dateCreated, checksumBigInt);
             result.addCrumb('block created');
             const json = block.toJSON();
             result.addCrumb('block converted to json');
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const rebuiltBlock = Block.fromJSON(
               json,
-              (memberId: Uint8Array) => alice
+              (memberId: bigint) => alice
             );
             result.addCrumb('block rebuilt from json');
             expect(rebuiltBlock).toBeTruthy();
@@ -106,14 +105,15 @@ describe('block', () => {
             const checksum = StaticHelpersChecksum.calculateChecksum(
               Buffer.from(data)
             );
+            const checksumBigInt = BigInt('0x' + checksum.toString('hex'));
             const dateCreated = new Date();
-            const block = new Block(alice, data, dateCreated, checksum);
+            const block = new Block(alice, data, dateCreated, checksumBigInt);
             result.addCrumb('block created');
             const json = block.toJSON();
             result.addCrumb('block converted to json');
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             expect(() =>
-              Block.fromJSON(json, (memberId: Uint8Array) => bob)
+              Block.fromJSON(json, (memberId: bigint) => bob)
             ).toThrow('Member mismatch');
           });
           return result.addCrumb('returning from test');
@@ -130,11 +130,12 @@ describe('block', () => {
             const badChecksum = StaticHelpersChecksum.calculateChecksum(
               Buffer.from(badData)
             );
+            const badChecksumBigInt = BigInt('0x' + badChecksum.toString('hex'));
             result.addCrumb(
               'block data generated, creating block with checksum mismatch'
             );
             expect(
-              () => new Block(alice, data, dateCreated, badChecksum)
+              () => new Block(alice, data, dateCreated, badChecksumBigInt)
             ).toThrow('Checksum mismatch');
           });
           return result.addCrumb('returning from test');
@@ -176,8 +177,9 @@ describe('block', () => {
             const checksum = StaticHelpersChecksum.calculateChecksum(
               Buffer.from(data)
             );
+            const checksumBigInt = BigInt('0x' + checksum.toString('hex'));
             const dateCreated = new Date();
-            const block = new Block(alice, data, undefined, checksum);
+            const block = new Block(alice, data, undefined, checksumBigInt);
             result.addCrumb('block created');
             expect(block.dateCreated).toBeTruthy();
             expect(block.dateCreated).toBeInstanceOf(Date);

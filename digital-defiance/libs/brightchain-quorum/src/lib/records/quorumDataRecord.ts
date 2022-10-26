@@ -1,12 +1,13 @@
 import * as uuid from 'uuid';
 import BrightChainMember from 'libs/brightchain/src/lib/brightChainMember';
 import { ec as EC } from 'elliptic';
-import StaticHelpers from 'libs/brightchain/src/lib/staticHelpers.checksum';
+import StaticHelpers from 'libs/brightchain/src/lib/staticHelpers';
+import StaticHelpersChecksum from 'libs/brightchain/src/lib/staticHelpers.checksum';
 import StaticHelpersElliptic from 'libs/brightchain/src/lib/staticHelpers.elliptic';
-import { IMemberShareCount } from './interfaces';
+import { IMemberShareCount } from '../interfaces';
 
 export default class QuorumDataRecord {
-  public readonly id: string;
+  public readonly id: bigint;
   public readonly encryptedData: Buffer;
   public static readonly checksumBits: number = 512;
   /**
@@ -14,14 +15,14 @@ export default class QuorumDataRecord {
    */
   public readonly checksum: Buffer;
   public readonly signature: EC.Signature | null;
-  public readonly memberIDs: string[];
+  public readonly memberIDs: bigint[];
   public readonly sharesRequired: number;
   public readonly dateCreated: Date;
   public readonly dateUpdated: Date;
 
   constructor(
     creator: BrightChainMember,
-    memberIDs: string[],
+    memberIDs: bigint[],
     sharesRequired: number,
     encryptedData: Buffer,
     shareCountsByMemberId?: Array<IMemberShareCount>,
@@ -31,9 +32,13 @@ export default class QuorumDataRecord {
     dateCreated?: Date,
     dateUpdated?: Date
   ) {
-    this.id = id ?? uuid.v4();
-    if (!uuid.validate(this.id)) {
-      throw new Error('Invalid quorum data record ID');
+    if (id !== undefined) {
+      if (!uuid.validate(id)) {
+        throw new Error('Invalid quorum data record ID');
+      }
+      this.id = StaticHelpers.UuidV4ToBigint(id);
+    } else {
+      this.id = StaticHelpers.newUuidV4AsBigint();
     }
 
     if (memberIDs.length != 0 && memberIDs.length < 2) {
@@ -58,7 +63,7 @@ export default class QuorumDataRecord {
 
     this.sharesRequired = sharesRequired;
     this.encryptedData = encryptedData;
-    const calculatedChecksum = StaticHelpers.calculateChecksum(encryptedData);
+    const calculatedChecksum = StaticHelpersChecksum.calculateChecksum(encryptedData);
     if (checksum && checksum !== calculatedChecksum) {
       throw new Error('Invalid checksum');
     }

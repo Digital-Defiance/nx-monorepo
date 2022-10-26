@@ -63,11 +63,10 @@ describe('staticHelpers', () => {
     expect(StaticHelpers.validateEmail('alice@example.com')).toBeTruthy();
     //TODO: more
   });
-  it("should convert uuid to and from uint8array", () => {
+  it("should convert uuid to and from bigint", () => {
     const uuid = randomUUID();
-    const uint8array = StaticHelpers.UuidV4ToUint8Array(uuid);
-    const uuid2 = StaticHelpers.Uint8ArrayToUuidV4(uint8array);
+    const uuidBigint = StaticHelpers.UuidV4ToBigint(uuid);
+    const uuid2 = StaticHelpers.BigIntToUuidV4(uuidBigint);
     expect(uuid).toEqual(uuid2);
-    expect(uint8array.length).toEqual(16);
   });
 });

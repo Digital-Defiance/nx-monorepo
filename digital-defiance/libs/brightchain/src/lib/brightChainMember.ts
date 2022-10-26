@@ -1,6 +1,10 @@
 import * as uuid from 'uuid';
 import { ec as EC } from 'elliptic';
-import { IReadOnlyBasicObject, ISigningKeyInfo, ISimpleKeyPairBuffer } from './interfaces';
+import {
+  IReadOnlyBasicObject,
+  ISigningKeyInfo,
+  ISimpleKeyPairBuffer,
+} from './interfaces';
 import StaticHelpersKeyPair from './staticHelpers.keypair';
 import BrightChainMemberType from './memberType';
 import StaticHelpers from './staticHelpers';
@@ -107,7 +111,7 @@ export default class BrightChainMember implements IReadOnlyBasicObject {
     return this._dataKeyPair.privateKey;
   }
 
-  public readonly id: Uint8Array;
+  public readonly id: bigint;
   public readonly memberType: BrightChainMemberType;
   public readonly name: string;
   public readonly contactEmail: string;
@@ -119,23 +123,20 @@ export default class BrightChainMember implements IReadOnlyBasicObject {
     contactEmail: string,
     signingKeyPair?: ISimpleKeyPairBuffer,
     dataKeyPair?: ISimpleKeyPairBuffer,
-    id?: Uint8Array,
+    id?: bigint,
     dateCreated?: Date,
     dateUpdated?: Date
   ) {
     this.memberType = memberType;
     if (id !== undefined) {
-      if (id.length !== 16) {
-        throw new Error('Invalid member ID');
-      }
       try {
-        StaticHelpers.Uint8ArrayToUuidV4(id); // throws if invalid
+        StaticHelpers.BigIntToUuidV4(id);
       } catch (e) {
         throw new Error('Invalid member ID');
       }
-      this.id = Buffer.from(id);
+      this.id = id;
     } else {
-      this.id = Buffer.from(StaticHelpers.UuidV4ToUint8Array(uuid.v4()));
+      this.id = StaticHelpers.newUuidV4AsBigint();
     }
     this.name = name;
     if (!this.name || this.name.length == 0) {
@@ -177,7 +178,7 @@ export default class BrightChainMember implements IReadOnlyBasicObject {
   }
 
   public get uuid(): string {
-    return StaticHelpers.Uint8ArrayToUuidV4(this.id);
+    return StaticHelpers.BigIntToUuidV4(this.id, false);
   }
 
   /**
@@ -342,7 +343,7 @@ export default class BrightChainMember implements IReadOnlyBasicObject {
       contactEmail,
       StaticHelpersKeyPair.getSigningKeyInfoFromKeyPair(keyPair.signing),
       keyPair.data,
-      StaticHelpers.UuidV4ToUint8Array(newId)
+      StaticHelpers.UuidV4ToBigint(newId)
     );
   }
 }

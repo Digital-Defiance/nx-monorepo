@@ -2,10 +2,16 @@ import { IMemberShareCount } from './interfaces';
 import BrightChainMember from 'libs/brightchain/src/lib/brightChainMember';
 import StaticHelpersSealing from './staticHelpers.sealing';
 import BrightChainMemberType from 'libs/brightchain/src/lib/memberType';
+import StaticHelpers from 'libs/brightchain/src/lib/staticHelpers';
 
 describe('brightchainQuorum', () => {
   it('should determine the correct number of shares when no additional information is given', () => {
-    const memberIds = ['member1', 'member2', 'member3', 'member4'];
+    const memberIds: bigint[] = [
+      StaticHelpers.newUuidV4AsBigint(),
+      StaticHelpers.newUuidV4AsBigint(),
+      StaticHelpers.newUuidV4AsBigint(),
+      StaticHelpers.newUuidV4AsBigint(),
+    ];
     const shareCountByMemberId = undefined;
     const sharesByMemberId =
       StaticHelpersSealing.determineShareCountsByMemberId(
@@ -13,22 +19,27 @@ describe('brightchainQuorum', () => {
         shareCountByMemberId
       );
     expect(sharesByMemberId.size).toEqual(4);
-    expect(sharesByMemberId.get('member1')).toEqual(1);
-    expect(sharesByMemberId.get('member2')).toEqual(1);
-    expect(sharesByMemberId.get('member3')).toEqual(1);
-    expect(sharesByMemberId.get('member4')).toEqual(1);
+    expect(sharesByMemberId.get(memberIds[0])).toEqual(1);
+    expect(sharesByMemberId.get(memberIds[1])).toEqual(1);
+    expect(sharesByMemberId.get(memberIds[2])).toEqual(1);
+    expect(sharesByMemberId.get(memberIds[3])).toEqual(1);
   });
   it('should determine the correct number of shares when additional information is given', () => {
-    const memberIds = ['member1', 'member2', 'member3', 'member4'];
+    const memberIds: bigint[] = [
+      StaticHelpers.newUuidV4AsBigint(),
+      StaticHelpers.newUuidV4AsBigint(),
+      StaticHelpers.newUuidV4AsBigint(),
+      StaticHelpers.newUuidV4AsBigint(),
+    ];
     const member1Shares = Math.ceil(Math.random() * 10);
     const member2Shares = Math.ceil(Math.random() * 10);
     const member3Shares = Math.ceil(Math.random() * 10);
     const member4Shares = Math.ceil(Math.random() * 10);
     const additionalInformation: Array<IMemberShareCount> = [
-      { memberId: 'member1', shares: member1Shares },
-      { memberId: 'member2', shares: member2Shares },
-      { memberId: 'member3', shares: member3Shares },
-      { memberId: 'member4', shares: member4Shares },
+      { memberId: memberIds[0], shares: member1Shares },
+      { memberId: memberIds[1], shares: member2Shares },
+      { memberId: memberIds[2], shares: member3Shares },
+      { memberId: memberIds[3], shares: member4Shares },
     ];
     const sharesByMemberId =
       StaticHelpersSealing.determineShareCountsByMemberId(
@@ -36,18 +47,23 @@ describe('brightchainQuorum', () => {
         additionalInformation
       );
     expect(sharesByMemberId.size).toEqual(4);
-    expect(sharesByMemberId.get('member1')).toEqual(member1Shares);
-    expect(sharesByMemberId.get('member2')).toEqual(member2Shares);
-    expect(sharesByMemberId.get('member3')).toEqual(member3Shares);
-    expect(sharesByMemberId.get('member4')).toEqual(member4Shares);
+    expect(sharesByMemberId.get(memberIds[0])).toEqual(member1Shares);
+    expect(sharesByMemberId.get(memberIds[1])).toEqual(member2Shares);
+    expect(sharesByMemberId.get(memberIds[2])).toEqual(member3Shares);
+    expect(sharesByMemberId.get(memberIds[3])).toEqual(member4Shares);
   });
   it('should determine the correct number of shares when partial additional information is given', () => {
-    const memberIds = ['member1', 'member2', 'member3', 'member4'];
+    const memberIds: bigint[] = [
+      StaticHelpers.newUuidV4AsBigint(),
+      StaticHelpers.newUuidV4AsBigint(),
+      StaticHelpers.newUuidV4AsBigint(),
+      StaticHelpers.newUuidV4AsBigint(),
+    ];
     const member2Shares = Math.ceil(Math.random() * 10);
     const member3Shares = Math.ceil(Math.random() * 10);
     const additionalInformation: Array<IMemberShareCount> = [
-      { memberId: 'member2', shares: member2Shares },
-      { memberId: 'member3', shares: member3Shares },
+      { memberId: memberIds[1], shares: member2Shares },
+      { memberId: memberIds[2], shares: member3Shares },
     ];
     const sharesByMemberId =
       StaticHelpersSealing.determineShareCountsByMemberId(
@@ -55,16 +71,21 @@ describe('brightchainQuorum', () => {
         additionalInformation
       );
     expect(sharesByMemberId.size).toEqual(4);
-    expect(sharesByMemberId.get('member1')).toEqual(1);
-    expect(sharesByMemberId.get('member2')).toEqual(member2Shares);
-    expect(sharesByMemberId.get('member3')).toEqual(member3Shares);
-    expect(sharesByMemberId.get('member4')).toEqual(1);
+    expect(sharesByMemberId.get(memberIds[0])).toEqual(1);
+    expect(sharesByMemberId.get(memberIds[1])).toEqual(member2Shares);
+    expect(sharesByMemberId.get(memberIds[2])).toEqual(member3Shares);
+    expect(sharesByMemberId.get(memberIds[3])).toEqual(1);
   });
   it('should throw when a bad member id is given in the additional information', () => {
-    const memberIds = ['member1', 'member2', 'member3', 'member4'];
+    const memberIds: bigint[] = [
+      StaticHelpers.newUuidV4AsBigint(),
+      StaticHelpers.newUuidV4AsBigint(),
+      StaticHelpers.newUuidV4AsBigint(),
+      StaticHelpers.newUuidV4AsBigint(),
+    ];
     const additionalInformation: Array<IMemberShareCount> = [
       {
-        memberId: 'member5',
+        memberId: StaticHelpers.newUuidV4AsBigint(),
         shares: 9,
       },
     ];
@@ -76,10 +97,15 @@ describe('brightchainQuorum', () => {
     }).toThrow();
   });
   it('should not lose information converting betweeen map and arrays', () => {
-    const memberIds = ['member1', 'member2', 'member3', 'member4'];
+    const memberIds: bigint[] = [
+      StaticHelpers.newUuidV4AsBigint(),
+      StaticHelpers.newUuidV4AsBigint(),
+      StaticHelpers.newUuidV4AsBigint(),
+      StaticHelpers.newUuidV4AsBigint(),
+    ];
     const additionalInformation: Array<IMemberShareCount> = [
-      { memberId: 'member2', shares: 2 },
-      { memberId: 'member3', shares: 3 },
+      { memberId: memberIds[1], shares: 2 },
+      { memberId: memberIds[2], shares: 3 },
     ];
     const sharesByMemberId =
       StaticHelpersSealing.determineShareCountsByMemberId(
@@ -93,28 +119,28 @@ describe('brightchainQuorum', () => {
       sharesByMemberIdSortedArray.shares
     );
     expect(sharesByMemberIdMap.size).toEqual(4);
-    expect(sharesByMemberIdMap.get('member1')).toEqual(1);
-    expect(sharesByMemberIdMap.get('member2')).toEqual(2);
-    expect(sharesByMemberIdMap.get('member3')).toEqual(3);
-    expect(sharesByMemberIdMap.get('member4')).toEqual(1);
+    expect(sharesByMemberIdMap.get(memberIds[0])).toEqual(1);
+    expect(sharesByMemberIdMap.get(memberIds[1])).toEqual(2);
+    expect(sharesByMemberIdMap.get(memberIds[2])).toEqual(3);
+    expect(sharesByMemberIdMap.get(memberIds[3])).toEqual(1);
     const entryFormatArray: Array<IMemberShareCount> =
       StaticHelpersSealing.shareCountsMapToCountEntries(sharesByMemberIdMap);
     expect(entryFormatArray.length).toEqual(4);
-    expect(entryFormatArray[0].memberId).toEqual('member1');
+    expect(entryFormatArray[0].memberId).toEqual(memberIds[0]);
     expect(entryFormatArray[0].shares).toEqual(1);
-    expect(entryFormatArray[1].memberId).toEqual('member2');
+    expect(entryFormatArray[1].memberId).toEqual(memberIds[1]);
     expect(entryFormatArray[1].shares).toEqual(2);
-    expect(entryFormatArray[2].memberId).toEqual('member3');
+    expect(entryFormatArray[2].memberId).toEqual(memberIds[2]);
     expect(entryFormatArray[2].shares).toEqual(3);
-    expect(entryFormatArray[3].memberId).toEqual('member4');
+    expect(entryFormatArray[3].memberId).toEqual(memberIds[3]);
     expect(entryFormatArray[3].shares).toEqual(1);
     const sharesByMemberIdSortedArray2 =
       StaticHelpersSealing.shareCountsArrayToSortedArrays(entryFormatArray);
     expect(sharesByMemberIdSortedArray2.memberIds.length).toEqual(4);
-    expect(sharesByMemberIdSortedArray2.memberIds[0]).toEqual('member1');
-    expect(sharesByMemberIdSortedArray2.memberIds[1]).toEqual('member2');
-    expect(sharesByMemberIdSortedArray2.memberIds[2]).toEqual('member3');
-    expect(sharesByMemberIdSortedArray2.memberIds[3]).toEqual('member4');
+    expect(sharesByMemberIdSortedArray2.memberIds[0]).toEqual(memberIds[0]);
+    expect(sharesByMemberIdSortedArray2.memberIds[1]).toEqual(memberIds[1]);
+    expect(sharesByMemberIdSortedArray2.memberIds[2]).toEqual(memberIds[2]);
+    expect(sharesByMemberIdSortedArray2.memberIds[3]).toEqual(memberIds[3]);
     expect(sharesByMemberIdSortedArray2.shares.length).toEqual(4);
     expect(sharesByMemberIdSortedArray2.shares[0]).toEqual(1);
     expect(sharesByMemberIdSortedArray2.shares[1]).toEqual(2);

@@ -9,7 +9,8 @@ import {
 } from './interfaces';
 import StaticHelpersKeyPair from 'libs/brightchain/src/lib/staticHelpers.keypair';
 import StaticHelpersSymmetric from 'libs/brightchain/src/lib/staticHelpers.symmetric';
-import QuorumDataRecord from './quorumDataRecord';
+import QuorumDataRecord from './records/quorumDataRecord';
+import StaticHelpers from 'libs/brightchain/src/lib/staticHelpers';
 
 /**
  * @description Static helper functions for Brightchain Quorum. Encryption and other utilities.
@@ -41,7 +42,7 @@ export default abstract class StaticHelpersSealing {
    * @returns the total number of shares
    */
   public static validateShareCountArrayReturnTotalShares(
-    amongstMemberIds: string[],
+    amongstMemberIds: bigint[],
     shareCountByMemberId?: Array<IMemberShareCount>
   ): number {
     let totalShares = 0;
@@ -49,7 +50,9 @@ export default abstract class StaticHelpersSealing {
       // ensure every entry in shareCountByMemberId has a corresponding member id and that the share count is valid
       for (let i = 0; i < shareCountByMemberId.length; i++) {
         const shares = shareCountByMemberId[i];
-        if (!amongstMemberIds.includes(shares.memberId)) {
+        if (
+          !amongstMemberIds.includes(shares.memberId)
+        ) {
           throw new Error(
             `Member id ${shares.memberId} not found in list of member ids`
           );
@@ -74,24 +77,27 @@ export default abstract class StaticHelpersSealing {
    * @returns
    */
   public static determineShareCountsByMemberId(
-    amongstMemberIds: string[],
+    amongstMemberIds: bigint[],
     shareCountByMemberId?: Array<IMemberShareCount>
-  ): Map<string, number> {
+  ): Map<bigint, number> {
     StaticHelpersSealing.validateShareCountArrayReturnTotalShares(
       amongstMemberIds,
       shareCountByMemberId
     );
-    const sharesByMemberId: Map<string, number> = new Map();
+    const sharesByMemberId: Map<bigint, number> = new Map();
     for (let i = 0; i < amongstMemberIds.length; i++) {
       const memberId = amongstMemberIds[i];
-      const sharesForMember = shareCountByMemberId?.find(
-        (s) => s.memberId === memberId
-      );
-      const shareCount = sharesForMember?.shares || 1;
-      if (shareCount < 1) {
-        throw new Error('Share count must be greater than or equal to 1');
+      let sharesForMember = 1;
+      if (shareCountByMemberId !== undefined) {
+        for (let j = 0; j < shareCountByMemberId.length; j++) {
+          const shareCount: IMemberShareCount = shareCountByMemberId[j];
+          if (shareCount.memberId == memberId) {
+            sharesForMember = shareCount.shares;
+            break;
+          }
+        }
       }
-      sharesByMemberId.set(memberId, shareCount);
+      sharesByMemberId.set(memberId, sharesForMember);
     }
     return sharesByMemberId;
   }
@@ -102,11 +108,11 @@ export default abstract class StaticHelpersSealing {
    * @returns
    */
   public static shareCountsMapToSortedArrays(
-    countMap: Map<string, number>
+    countMap: Map<bigint, number>
   ): ISortedMemberShareCountArrays {
     const sortedMemberIds = Array.from(countMap.keys()).sort();
     const memberCount = sortedMemberIds.length;
-    const memberIds: string[] = [];
+    const memberIds: bigint[] = [];
     const shares: number[] = [];
     let totalShares = 0;
     for (let i = 0; i < sortedMemberIds.length; i++) {
@@ -130,15 +136,15 @@ export default abstract class StaticHelpersSealing {
   public static shareCountsArrayToSortedArrays(
     shareCountByMemberId: Array<IMemberShareCount>
   ): ISortedMemberShareCountArrays {
-    const sortedMemberIds = shareCountByMemberId.map((s) => s.memberId).sort();
+    const sortedMemberIds = shareCountByMemberId.map((x) => x.memberId).sort();
     const memberCount = sortedMemberIds.length;
-    const memberIds: string[] = [];
+    const memberIds: bigint[] = [];
     const shares: number[] = [];
     let totalShares = 0;
     for (let i = 0; i < sortedMemberIds.length; i++) {
       const memberId = sortedMemberIds[i];
-      const shareCount = shareCountByMemberId.find(
-        (s) => s.memberId === memberId
+      const shareCount = shareCountByMemberId.find((s) =>
+        s.memberId == memberId
       )?.shares;
       if (shareCount === undefined) {
         throw new Error('Share count is undefined');
@@ -156,7 +162,7 @@ export default abstract class StaticHelpersSealing {
    * @returns
    */
   public static shareCountsMapToCountEntries(
-    countMap: Map<string, number>
+    countMap: Map<bigint, number>
   ): Array<IMemberShareCount> {
     const entries: Array<IMemberShareCount> = [];
     countMap.forEach((shares, memberId) => {
@@ -172,10 +178,10 @@ export default abstract class StaticHelpersSealing {
    * @returns
    */
   public static shareCountsArrayToMap(
-    memberIds: string[],
+    memberIds: bigint[],
     shares: number[]
-  ): Map<string, number> {
-    const countMap: Map<string, number> = new Map();
+  ): Map<bigint, number> {
+    const countMap: Map<bigint, number> = new Map();
     for (let i = 0; i < memberIds.length; i++) {
       const memberId = memberIds[i];
       const shareCount = shares[i];
@@ -194,7 +200,7 @@ export default abstract class StaticHelpersSealing {
   public static quorumSeal<T>(
     agent: BrightChainMember,
     data: T,
-    amongstMemberIds: string[],
+    amongstMemberIds: bigint[],
     shareCountByMemberId?: Array<IMemberShareCount>,
     sharesRequired?: number
   ): IQoroumSealResults {
@@ -213,7 +219,7 @@ export default abstract class StaticHelpersSealing {
     if (sharesRequired < 2) {
       throw new Error('At least two shares/members are required');
     }
-    const sharesByMemberIdMap: Map<string, number> =
+    const sharesByMemberIdMap: Map<bigint, number> =
       StaticHelpersSealing.determineShareCountsByMemberId(
         amongstMemberIds,
         shareCountByMemberId
@@ -274,8 +280,8 @@ export default abstract class StaticHelpersSealing {
     shares: Shares,
     members: BrightChainMember[],
     shareCountByMemberId?: Array<IMemberShareCount>
-  ): Map<string, EncryptedShares> {
-    const shareCountsByMemberId: Map<string, number> =
+  ): Map<bigint, EncryptedShares> {
+    const shareCountsByMemberId: Map<bigint, number> =
       StaticHelpersSealing.determineShareCountsByMemberId(
         members.map((v) => v.id),
         shareCountByMemberId
@@ -283,12 +289,12 @@ export default abstract class StaticHelpersSealing {
     const sortedMembers = StaticHelpersSealing.shareCountsMapToSortedArrays(
       shareCountsByMemberId
     );
-    const sharesByMemberId = new Map<string, Shares>();
-    const encryptedSharesByMemberId = new Map<string, EncryptedShares>();
+    const sharesByMemberId = new Map<bigint, Shares>();
+    const encryptedSharesByMemberId = new Map<bigint, EncryptedShares>();
     let shareIndex = 0;
     for (let i = 0; i < sortedMembers.memberIds.length; i++) {
       const memberId = sortedMembers.memberIds[i];
-      const member = members.find((v) => v.id === memberId);
+      const member = members.find((v) => v.id == memberId);
       if (!member) {
         throw new Error('Member not found');
       }
@@ -321,7 +327,7 @@ export default abstract class StaticHelpersSealing {
   }
 
   public static combineEncryptedShares(
-    encryptedShares: Map<string, EncryptedShares>
+    encryptedShares: Map<bigint, EncryptedShares>
   ): EncryptedShares {
     const combinedShares: EncryptedShares = new Array<string>();
     encryptedShares.forEach((shares) => {
@@ -338,7 +344,7 @@ export default abstract class StaticHelpersSealing {
     members: BrightChainMember[],
     shareCountByMemberId?: Array<IMemberShareCount>
   ): Shares {
-    const shareCountsByMemberId: Map<string, number> =
+    const shareCountsByMemberId: Map<bigint, number> =
       StaticHelpersSealing.determineShareCountsByMemberId(
         members.map((v) => v.id),
         shareCountByMemberId
@@ -356,7 +362,7 @@ export default abstract class StaticHelpersSealing {
     let shareIndex = 0;
     for (let i = 0; i < sortedMembers.memberCount; i++) {
       const memberId = sortedMembers.memberIds[i];
-      const member = members.find((v) => v.id === memberId);
+      const member = members.find((v) => v.id == memberId);
       if (!member) {
         throw new Error('Member not found');
       }

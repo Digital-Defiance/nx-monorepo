@@ -519,9 +519,14 @@ export default abstract class StaticHelpersKeyPair {
     memberId: string,
     signingKeyPair: EC.KeyPair
   ): string {
-    const mnemonic = entropyToMnemonic(signingKeyPair.getPrivate('hex'));
-    // lets seed the passphrase with the member's id for some more entropy
-    return [memberId, '!', mnemonic].join('');
+    try {
+      const mnemonic = entropyToMnemonic(signingKeyPair.getPrivate('hex'));
+      // lets seed the passphrase with the member's id for some more entropy
+      return [memberId, '!', mnemonic].join('');
+    }
+    catch (e) {
+      throw new Error('Unable to challenge data key pair with mneomonic from signing key pair');
+    }
   }
 
   /**

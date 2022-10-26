@@ -9,36 +9,35 @@ export default class Block implements IReadOnlyDataObject {
     creator: BrightChainMember,
     data: Uint8Array,
     dateCreated?: Date,
-    checksum?: Uint8Array
+    checksum?: bigint
   ) {
-    this.createdBy = Buffer.from(creator.id);
+    this.createdBy = creator.id;
     if (!validateBlockSize(data.length)) {
       throw new Error(`Data length ${data.length} is not a valid block size`);
     }
     this.data = Buffer.from(data);
-    this.id = Buffer.from(
-      StaticHelpersChecksum.calculateChecksum(Buffer.from(data))
-    );
+    const rawChecksum = StaticHelpersChecksum.calculateChecksum(Buffer.from(data));
+    this.id = BigInt('0x' + rawChecksum.toString('hex'));
+      
     if (
       checksum !== undefined &&
-      checksum.length == this.id.length &&
-      !Buffer.from(this.id).equals(Buffer.from(checksum))
+      this.id !== checksum
     ) {
       throw new Error('Checksum mismatch');
     }
     this.dateCreated = dateCreated ?? new Date();
   }
-  public readonly id: Uint8Array;
+  public readonly id: bigint;
   public get blockSize(): BlockSize {
     return lengthToBlockSize(this.data.length);
   }
   public readonly data: Uint8Array;
   public get checksumString() {
-    return Buffer.from(this.id).toString('hex');
+    return this.id.toString(16);
   }
-  public readonly createdBy: Uint8Array;
+  public readonly createdBy: bigint;
   public get createdById(): string {
-    return StaticHelpers.Uint8ArrayToUuidV4(this.createdBy, false);
+    return StaticHelpers.BigIntToUuidV4(this.createdBy, false);
   }
   public readonly dateCreated: Date;
   public xor(other: Block, agent: BrightChainMember): Block {
@@ -53,25 +52,24 @@ export default class Block implements IReadOnlyDataObject {
   }
   public toJSON(): string {
     return JSON.stringify({
-      id: Buffer.from(this.id).toString('hex'),
+      id: this.id.toString(16),
       data: Buffer.from(this.data).toString('hex'),
-      createdBy: Buffer.from(this.createdBy).toString('hex'),
+      createdBy: this.createdBy.toString(16),
       dateCreated: this.dateCreated,
     });
   }
   public static fromJSON(
     json: string,
-    fetchMember: (memberId: Uint8Array) => BrightChainMember
+    fetchMember: (memberId: bigint) => BrightChainMember
   ): Block {
     const parsed = JSON.parse(json);
-    const parsedMemberId = Buffer.from(parsed.createdBy, 'hex');
+    const parsedMemberId = BigInt('0x' + parsed.createdBy);
     const data = Buffer.from(parsed.data, 'hex');
     const dateCreated = new Date(parsed.dateCreated);
-    const parsedBlockId = Buffer.from(parsed.id, 'hex');
+    const parsedBlockId = BigInt('0x' + parsed.id);
     const member = fetchMember(parsedMemberId);
     if (
-      member.id.length != parsedMemberId.length ||
-      !Buffer.from(member.id).equals(parsedMemberId)
+      member.id != parsedMemberId
     ) {
       throw new Error('Member mismatch');
     }

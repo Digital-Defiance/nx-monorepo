@@ -6,12 +6,12 @@ export interface IQoroumSealResults {
 }
 
 export interface IMemberShareCount {
-  memberId: string;
+  memberId: bigint;
   shares: number;
 }
 
 export interface ISortedMemberShareCountArrays {
-  memberIds: string[];
+  memberIds: bigint[];
   shares: number[],
   memberCount: number;
   totalShares: number;

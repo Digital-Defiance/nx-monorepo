@@ -70,22 +70,15 @@ export default abstract class StaticHelpers {
     return false;
   }
 
-  public static UuidV4ToUint8Array(uuid: string): Uint8Array {
-    const bigIntValue = BigInt('0x' + uuid.replace(/-/g, ''));
-    const buffer = Buffer.alloc(16); // 128 bits
-    buffer.writeBigUInt64BE(bigIntValue >> BigInt(64), 0);
-    buffer.writeBigUInt64BE(bigIntValue & BigInt('0xffffffffffffffff'), 8);
-    return new Uint8Array(buffer);
+  public static UuidV4ToBigint(id: string, validate?: boolean): bigint {
+    if ((validate === undefined || validate === true) && !uuid.validate(id)) {
+      throw new Error('Invalid UUID');
+    }
+    return BigInt('0x' + id.replace(/-/g, ''));
   }
 
-  public static Uint8ArrayToUuidV4(
-    uint8Array: Uint8Array,
-    validate?: boolean
-  ): string {
-    const buffer = Buffer.from(uint8Array);
-    const bigIntValue =
-      (buffer.readBigUInt64BE(0) << BigInt(64)) | buffer.readBigUInt64BE(8);
-    const uuidBigInt = bigIntValue.toString(16).padStart(32, '0');
+  public static BigIntToUuidV4(bigInt: bigint, validate?: boolean): string {
+    const uuidBigInt = bigInt.toString(16).padStart(32, '0');
     const rebuiltUuid =
       uuidBigInt.slice(0, 8) +
       '-' +
@@ -103,5 +96,9 @@ export default abstract class StaticHelpers {
       throw new Error('Invalid UUID');
     }
     return rebuiltUuid;
+  }
+
+  public static newUuidV4AsBigint(): bigint {
+    return StaticHelpers.UuidV4ToBigint(uuid.v4());
   }
 }

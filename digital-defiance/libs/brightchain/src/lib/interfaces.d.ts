@@ -1,4 +1,4 @@
-import { ec} from 'elliptic';
+import { ec } from 'elliptic';
 
 export interface ISimpleKeyPair {
   publicKey: string;
@@ -60,7 +60,7 @@ export interface IBasicObject {
   /**
    * ID of the data object. Must be unique, usually UUID v4.
    */
-  id: Uint8Array;
+  id: bigint;
   /**
    * The date this object was created
    */
@@ -71,7 +71,7 @@ export interface IBasicDataObject extends IBasicObject {
   /**
    * ID of the data object. checksum of the data.
    */
-  id: Uint8Array;
+  id: bigint;
   /**
    * The data to be stored
    */
@@ -79,7 +79,7 @@ export interface IBasicDataObject extends IBasicObject {
   /**
    * The ID of the member who created this object
    */
-  createdBy: Uint8Array;
+  createdBy: bigint;
   /**
    * The date this object was created
    */
@@ -87,15 +87,15 @@ export interface IBasicDataObject extends IBasicObject {
 }
 
 export interface IReadOnlyBasicObject extends IBasicObject {
-  readonly id: Uint8Array;
+  readonly id: bigint;
   readonly dateCreated: Date;
 }
 
 export interface IReadOnlyDataObject
   extends IBasicDataObject,
     IReadOnlyBasicObject {
-  readonly id: Uint8Array; // checksum
+  readonly id: bigint; // checksum
   readonly data: Uint8Array;
-  readonly createdBy: Uint8Array;
+  readonly createdBy: bigint;
   readonly dateCreated: Date;
 }
