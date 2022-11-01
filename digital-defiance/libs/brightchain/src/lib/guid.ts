@@ -1,7 +1,8 @@
 import * as uuid from 'uuid';
 import { AnyBrand, Brand } from 'ts-brand';
 
-export enum GuidBrand {
+export enum GuidBrandType {
+  Unknown = 'Unknown',
   FullHexGuid = 'FullHexGuid',
   ShortHexGuid = 'ShortHexGuid',
   Base64Guid = 'Base64Guid',
@@ -9,67 +10,102 @@ export enum GuidBrand {
   FullHexGuidBuffer = 'FullHexGuidBuffer',
   ShortHexGuidBuffer = 'ShortHexGuidBuffer',
   Base64GuidBuffer = 'Base64GuidBuffer',
-  RawBuffer = 'RawBuffer',
+  RawGuidBuffer = 'RawGuidBuffer',
 }
 
-export type FullHexGuidBuffer = Brand<Buffer, 'GuidV4', GuidBrand.FullHexGuid>;
+export type FullHexGuidBuffer = Brand<
+  Buffer,
+  'GuidV4',
+  GuidBrandType.FullHexGuid
+>;
 export type ShortHexGuidBuffer = Brand<
   Buffer,
   'GuidV4',
-  GuidBrand.ShortHexGuid
+  GuidBrandType.ShortHexGuid
 >;
-export type Base64GuidBuffer = Brand<Buffer, 'GuidV4', GuidBrand.Base64Guid>;
-export type BigIntGuid = Brand<bigint, 'GuidV4', GuidBrand.BigIntGuid>;
-export type FullHexGuid = Brand<string, 'GuidV4', GuidBrand.FullHexGuidBuffer>;
+export type Base64GuidBuffer = Brand<
+  Buffer,
+  'GuidV4',
+  GuidBrandType.Base64Guid
+>;
+export type BigIntGuid = Brand<bigint, 'GuidV4', GuidBrandType.BigIntGuid>;
+export type FullHexGuid = Brand<
+  string,
+  'GuidV4',
+  GuidBrandType.FullHexGuidBuffer
+>;
 export type ShortHexGuid = Brand<
   string,
   'GuidV4',
-  GuidBrand.ShortHexGuidBuffer
+  GuidBrandType.ShortHexGuidBuffer
 >;
-export type Base64Guid = Brand<string, 'GuidV4', GuidBrand.Base64GuidBuffer>;
-export type RawBuffer = Brand<Buffer, 'GuidV4', GuidBrand.RawBuffer>;
+export type Base64Guid = Brand<
+  string,
+  'GuidV4',
+  GuidBrandType.Base64GuidBuffer
+>;
+export type RawGuidBuffer = Brand<
+  Buffer,
+  'GuidV4',
+  GuidBrandType.RawGuidBuffer
+>;
 
-export const lengthMap: Map<GuidBrand, number> = new Map<GuidBrand, number>([
-  [GuidBrand.FullHexGuid, 36],
-  [GuidBrand.ShortHexGuid, 32],
-  [GuidBrand.Base64Guid, 24],
-  [GuidBrand.FullHexGuidBuffer, 36],
-  [GuidBrand.ShortHexGuidBuffer, 32],
-  [GuidBrand.Base64GuidBuffer, 22],
-  [GuidBrand.RawBuffer, 16],
+export const lengthMap: Map<GuidBrandType, number> = new Map<
+  GuidBrandType,
+  number
+>([
+  [GuidBrandType.FullHexGuid, 36],
+  [GuidBrandType.ShortHexGuid, 32],
+  [GuidBrandType.Base64Guid, 24],
+  [GuidBrandType.FullHexGuidBuffer, 36],
+  [GuidBrandType.ShortHexGuidBuffer, 32],
+  [GuidBrandType.Base64GuidBuffer, 24],
+  [GuidBrandType.RawGuidBuffer, 16],
 ]);
 
-export const verifyFunctions: Map<GuidBrand, (guid: AnyBrand, validate?: boolean) => boolean> =
-  new Map<GuidBrand, (guid: AnyBrand) => boolean>([
-    [GuidBrand.FullHexGuid, isFullHexGuid],
-    [GuidBrand.ShortHexGuid, isShortHexGuid],
-    [GuidBrand.Base64Guid, isBase64Guid],
-    [GuidBrand.BigIntGuid, isBigIntGuid],
-    [GuidBrand.FullHexGuidBuffer, isFullHexGuid],
-    [GuidBrand.ShortHexGuidBuffer, isShortHexGuid],
-    [GuidBrand.Base64GuidBuffer, isBase64Guid],
-    [GuidBrand.RawBuffer, isRawGuid],
-  ]);
+export const verifyFunctions: Map<
+  GuidBrandType,
+  (guid: AnyBrand, validate?: boolean) => boolean
+> = new Map<GuidBrandType, (guid: AnyBrand) => boolean>([
+  [GuidBrandType.FullHexGuid, isFullHexGuid],
+  [GuidBrandType.ShortHexGuid, isShortHexGuid],
+  [GuidBrandType.Base64Guid, isBase64Guid],
+  [GuidBrandType.BigIntGuid, isBigIntGuid],
+  [GuidBrandType.FullHexGuidBuffer, isFullHexGuid],
+  [GuidBrandType.ShortHexGuidBuffer, isShortHexGuid],
+  [GuidBrandType.Base64GuidBuffer, isBase64Guid],
+  [GuidBrandType.RawGuidBuffer, isRawGuid],
+]);
 
-export function verifyGuid(band: GuidBrand, guid: AnyBrand, validate?: boolean): boolean {
-  const verifyFunc = verifyFunctions.get(band);
+export function verifyGuid(
+  guidBrand: GuidBrandType,
+  guid: AnyBrand,
+  validate?: boolean
+): boolean {
+  const verifyFunc = verifyFunctions.get(guidBrand);
   if (verifyFunc === undefined) {
     return false;
   }
   return verifyFunc(guid, validate);
 }
 
-export function guidBrandToLength(brand: GuidBrand): number {
-  const guid = lengthMap.get(brand);
+export function guidBrandToLength(guidBrand: GuidBrandType): number {
+  const guid = lengthMap.get(guidBrand);
   if (guid === undefined) {
-    throw new Error(`Unknown guid brand: ${brand}`);
+    throw new Error(`Unknown guid brand: ${guidBrand}`);
   }
   return guid as number;
 }
 
-export function lengthToGuidBrand(length: number): GuidBrand {
+export function lengthToGuidBrand(
+  length: number,
+  isBuffer: boolean
+): GuidBrandType {
   for (const [brand, len] of lengthMap) {
     if (len === length) {
+      if (isBuffer && !brand.endsWith('Buffer')) {
+        continue;
+      }
       return brand;
     }
   }
@@ -77,21 +113,24 @@ export function lengthToGuidBrand(length: number): GuidBrand {
 }
 
 export function isFullHexGuid(
-  value: string | Buffer,
+  fullHexGuidValue: string | Buffer,
   validate?: boolean
 ): boolean {
   let result = false;
-  if (value instanceof Buffer) {
-    result = value.length === guidBrandToLength(GuidBrand.FullHexGuidBuffer);
+  if (fullHexGuidValue instanceof Buffer) {
+    result =
+      fullHexGuidValue.length ===
+      guidBrandToLength(GuidBrandType.FullHexGuidBuffer);
   }
-  result = value.length === guidBrandToLength(GuidBrand.FullHexGuid);
+  result =
+    fullHexGuidValue.length === guidBrandToLength(GuidBrandType.FullHexGuid);
   if (result && validate === true) {
-    if (value instanceof Buffer) {
-      if (!uuid.validate(value.toString())) {
+    if (fullHexGuidValue instanceof Buffer) {
+      if (!uuid.validate(fullHexGuidValue.toString())) {
         return false;
       }
-    } else if (typeof value === 'string') {
-      if (!uuid.validate(value)) {
+    } else if (typeof fullHexGuidValue === 'string') {
+      if (!uuid.validate(fullHexGuidValue)) {
         return false;
       }
     }
@@ -100,25 +139,31 @@ export function isFullHexGuid(
 }
 
 export function isShortHexGuid(
-  value: string | Buffer,
+  shortHexGuidValue: string | Buffer,
   validate?: boolean
 ): boolean {
   let result = false;
-  if (value instanceof Buffer) {
-    result = value.length === guidBrandToLength(GuidBrand.ShortHexGuidBuffer);
+  if (shortHexGuidValue instanceof Buffer) {
+    result =
+      shortHexGuidValue.length ===
+      guidBrandToLength(GuidBrandType.ShortHexGuidBuffer);
+  } else if (typeof shortHexGuidValue === 'string') {
+    result =
+      shortHexGuidValue.length ===
+      guidBrandToLength(GuidBrandType.ShortHexGuid);
   }
-  result = value.length === guidBrandToLength(GuidBrand.ShortHexGuid);
   if (result && validate === true) {
-    let fromShortHex: Buffer = Buffer.alloc(0);
-    if (value instanceof Buffer) {
-      fromShortHex = Buffer.from(value.toString('hex'), 'hex');
-    } else if (typeof value === 'string') {
-      fromShortHex = Buffer.from(value, 'hex');
-    }
-    if (fromShortHex.length !== guidBrandToLength(GuidBrand.RawBuffer)) {
+    const rawGuidBufferFromShortHex: Buffer =
+      toRawGuidBuffer(shortHexGuidValue);
+    if (
+      rawGuidBufferFromShortHex.length !==
+      guidBrandToLength(GuidBrandType.RawGuidBuffer)
+    ) {
       return false;
     }
-    if (!uuid.validate(ensureDashFormat(fromShortHex.toString('hex')))) {
+    if (
+      !uuid.validate(toFullHexGuid(rawGuidBufferFromShortHex.toString('hex')))
+    ) {
       return false;
     }
   }
@@ -131,20 +176,15 @@ export function isBase64Guid(
 ): boolean {
   let result = false;
   if (value instanceof Buffer) {
-    result = value.length === guidBrandToLength(GuidBrand.Base64GuidBuffer);
+    result = value.length === guidBrandToLength(GuidBrandType.Base64GuidBuffer);
   }
-  result = value.length === guidBrandToLength(GuidBrand.Base64Guid);
+  result = value.length === guidBrandToLength(GuidBrandType.Base64Guid);
   if (result && validate === true) {
-    let fromBase64: Buffer = Buffer.alloc(0);
-    if (value instanceof Buffer) {
-      fromBase64 = Buffer.from(value.toString(), 'base64');
-    } else if (typeof value === 'string') {
-      fromBase64 = Buffer.from(value, 'base64');
-    }
-    if (fromBase64.length !== guidBrandToLength(GuidBrand.RawBuffer)) {
+    const fromBase64: Buffer = toRawGuidBuffer(value);
+    if (fromBase64.length !== guidBrandToLength(GuidBrandType.RawGuidBuffer)) {
       return false;
     }
-    if (!uuid.validate(ensureDashFormat(fromBase64.toString('hex')))) {
+    if (!uuid.validate(toFullHexGuid(fromBase64.toString('hex')))) {
       return false;
     }
   }
@@ -154,10 +194,10 @@ export function isBase64Guid(
 export function isRawGuid(value: Buffer, validate?: boolean): boolean {
   let result = false;
   if (value instanceof Buffer) {
-    result = value.length === guidBrandToLength(GuidBrand.RawBuffer);
+    result = value.length === guidBrandToLength(GuidBrandType.RawGuidBuffer);
   }
   if (result && validate === true) {
-    if (!uuid.validate(ensureDashFormat(value.toString('hex')))) {
+    if (!uuid.validate(toFullHexGuid(value.toString('hex')))) {
       return false;
     }
   }
@@ -171,8 +211,8 @@ export function isBigIntGuid(value: bigint, validate?: boolean): boolean {
   }
   if (result && validate === true) {
     try {
-      const fromBigInt = fullHexFromBigInt(value);
-      if (!uuid.validate(ensureDashFormat(fromBigInt))) {
+      const fromBigInt = toFullHexFromBigInt(value);
+      if (!uuid.validate(toFullHexGuid(fromBigInt))) {
         return false;
       }
     } catch (e) {
@@ -182,15 +222,16 @@ export function isBigIntGuid(value: bigint, validate?: boolean): boolean {
   return result;
 }
 
-export function whichBrand(value: AnyBrand): GuidBrand {
+export function whichBrand(value: AnyBrand): GuidBrandType {
   if (typeof value === 'bigint') {
-    if (verifyGuid(GuidBrand.BigIntGuid, value)) {
-      return GuidBrand.BigIntGuid;
+    if (verifyGuid(GuidBrandType.BigIntGuid, value)) {
+      return GuidBrandType.BigIntGuid;
     }
     throw new Error(`Unknown guid brand: ${value}`);
   }
-  const expectedLength = value instanceof Buffer ? value.length : value.length;
-  const expectedBrand = lengthToGuidBrand(expectedLength);
+  const isBuffer = value instanceof Buffer;
+  const expectedLength = isBuffer ? value.length : value.length;
+  const expectedBrand = lengthToGuidBrand(expectedLength, isBuffer);
   const verifiedBrand = verifyGuid(expectedBrand, value);
   if (verifiedBrand) {
     return expectedBrand;
@@ -198,7 +239,7 @@ export function whichBrand(value: AnyBrand): GuidBrand {
   throw new Error(`Unknown guid brand: ${value}`);
 }
 
-export function ensureDashFormat(guid: string): FullHexGuid {
+export function toFullHexGuid(guid: string): FullHexGuid {
   if (guid.length == 32) {
     // insert dashes
     const str = guid.replace(
@@ -213,7 +254,7 @@ export function ensureDashFormat(guid: string): FullHexGuid {
   }
 }
 
-export function ensureShortFormat(
+export function toShortHexGuid(
   guid: string | FullHexGuid | ShortHexGuid | Base64Guid
 ): ShortHexGuid {
   if (guid.length == 32) {
@@ -229,7 +270,7 @@ export function ensureShortFormat(
   }
 }
 
-export function fullHexFromBigInt(bigInt: bigint): FullHexGuid {
+export function toFullHexFromBigInt(bigInt: bigint): FullHexGuid {
   const uuidBigInt = bigInt.toString(16).padStart(32, '0');
   const rebuiltUuid =
     uuidBigInt.slice(0, 8) +
@@ -245,103 +286,115 @@ export function fullHexFromBigInt(bigInt: bigint): FullHexGuid {
 }
 
 export function fullHexFromBase64(base64: string | Base64Guid): FullHexGuid {
-  return ensureDashFormat(
+  return toFullHexGuid(
     Buffer.from(base64, 'base64').toString('hex')
   ) as FullHexGuid;
 }
 
-export function toRawBuffer(value: AnyBrand): RawBuffer {
+export function toRawGuidBuffer(value: AnyBrand): RawGuidBuffer {
   const expectedBrand = whichBrand(value);
   const verifiedBrand = verifyGuid(expectedBrand, value);
   if (!verifiedBrand) {
     throw new Error(`Invalid guid brand: ${value}`);
   }
-  let result: RawBuffer = Buffer.alloc(0) as RawBuffer;
+  let rawGuidBufferResult: RawGuidBuffer = Buffer.alloc(0) as RawGuidBuffer;
   switch (expectedBrand) {
-    case GuidBrand.FullHexGuid:
-      result = Buffer.from(
-        ensureShortFormat(value as FullHexGuid),
+    case GuidBrandType.FullHexGuid:
+      rawGuidBufferResult = Buffer.from(
+        toShortHexGuid(value as FullHexGuid),
         'hex'
-      ) as RawBuffer;
+      ) as RawGuidBuffer;
       break;
-    case GuidBrand.ShortHexGuid:
-      result = Buffer.from(
-        ensureShortFormat(value as ShortHexGuid),
+    case GuidBrandType.ShortHexGuid:
+      rawGuidBufferResult = Buffer.from(
+        toShortHexGuid(value as ShortHexGuid),
         'hex'
-      ) as RawBuffer;
+      ) as RawGuidBuffer;
       break;
-    case GuidBrand.Base64Guid:
-      result = Buffer.from(value, 'base64') as RawBuffer;
+    case GuidBrandType.Base64Guid:
+      rawGuidBufferResult = Buffer.from(value, 'base64') as RawGuidBuffer;
       break;
-    case GuidBrand.FullHexGuidBuffer:
-      result = Buffer.from(ensureShortFormat(value.toString())) as RawBuffer;
-      break;
-    case GuidBrand.ShortHexGuidBuffer:
-      result = Buffer.from(ensureShortFormat(value.toString())) as RawBuffer;
-      break;
-    case GuidBrand.Base64GuidBuffer:
-      result = Buffer.from(value.toString(), 'base64') as RawBuffer;
-      break;
-    case GuidBrand.RawBuffer:
-      result = value as RawBuffer;
-      break;
-    case GuidBrand.BigIntGuid:
-      result = Buffer.from(
-        ensureShortFormat(fullHexFromBigInt(value as bigint)),
+    case GuidBrandType.FullHexGuidBuffer:
+      rawGuidBufferResult = Buffer.from(
+        toShortHexGuid((value as FullHexGuidBuffer).toString()),
         'hex'
-      ) as RawBuffer;
+      ) as RawGuidBuffer;
+      break;
+    case GuidBrandType.ShortHexGuidBuffer:
+      rawGuidBufferResult = Buffer.from(
+        toShortHexGuid((value as ShortHexGuidBuffer).toString()),
+        'hex'
+      ) as RawGuidBuffer;
+      break;
+    case GuidBrandType.Base64GuidBuffer:
+      rawGuidBufferResult = Buffer.from(
+        (value as Base64GuidBuffer).toString(),
+        'base64'
+      ) as RawGuidBuffer;
+      break;
+    case GuidBrandType.RawGuidBuffer:
+      rawGuidBufferResult = value as RawGuidBuffer;
+      break;
+    case GuidBrandType.BigIntGuid:
+      rawGuidBufferResult = Buffer.from(
+        toShortHexGuid(toFullHexFromBigInt(value as bigint)),
+        'hex'
+      ) as RawGuidBuffer;
       break;
     default:
       throw new Error(`Unknown guid brand: ${value}`);
   }
-  return result;
+  const expectedLength = guidBrandToLength(GuidBrandType.RawGuidBuffer);
+  if (rawGuidBufferResult.length !== expectedLength) {
+    throw new Error(
+      `Invalid guid brand: ${value}/${rawGuidBufferResult.toString('hex')}/${
+        rawGuidBufferResult.length
+      } != ${expectedLength}`
+    );
+  }
+  return rawGuidBufferResult;
 }
 
 export class GuidV4 {
-  private _value: RawBuffer;
+  private _value: RawGuidBuffer;
   constructor(value: string | AnyBrand) {
     const expectedBrand = whichBrand(value);
     const verifiedBrand = verifyGuid(expectedBrand, value);
     if (!verifiedBrand) {
       throw new Error(`Invalid guid: ${value}`);
     }
-    this._value = toRawBuffer(value);
-
-    if (!uuid.validate(ensureDashFormat(this._value.toString('hex')))) {
-      throw new Error('Invalid Guid');
-    }
+    this._value = toRawGuidBuffer(value);
   }
   public static new(): GuidV4 {
     return new GuidV4(uuid.v4() as FullHexGuid);
   }
-  public get guid(): FullHexGuid {
-    return ensureDashFormat(this._value.toString('hex')) as FullHexGuid;
+  public get asFullHexGuid(): FullHexGuid {
+    return toFullHexGuid(this._value.toString('hex')) as FullHexGuid;
   }
-  public get uint8Array(): Uint8Array {
+  public get asUint8Array(): Uint8Array {
     return this._value as Uint8Array;
   }
-  public get shortBuffer(): ShortHexGuidBuffer {
-    return Buffer.from(this._value) as ShortHexGuidBuffer;
+  public get asShortHexGuidBuffer(): ShortHexGuidBuffer {
+    return Buffer.from(
+      toShortHexGuid(this.asFullHexGuid)
+    ) as ShortHexGuidBuffer;
   }
-  public get guidSringBuffer(): FullHexGuidBuffer {
-    return Buffer.from(this.guid) as FullHexGuidBuffer;
+  public get asFullHexGuidBuffer(): FullHexGuidBuffer {
+    return Buffer.from(this.asFullHexGuid) as FullHexGuidBuffer;
   }
-  public get asDashedString(): FullHexGuid {
-    return ensureDashFormat(this._value.toString('hex')) as FullHexGuid;
-  }
-  public get asShortString(): ShortHexGuid {
-    return ensureShortFormat(this.guid) as ShortHexGuid;
+  public get asShortHexGuid(): ShortHexGuid {
+    return toShortHexGuid(this.asFullHexGuid) as ShortHexGuid;
   }
   public toString(): Base64Guid {
-    return this.base64 as Base64Guid;
+    return this.asBase64Guid as Base64Guid;
   }
   public toJSON(): string {
-    return this.base64;
+    return this.asBase64Guid;
   }
-  public get bigInt(): BigIntGuid {
+  public get asBigIntGuid(): BigIntGuid {
     return BigInt('0x' + this._value.toString('hex')) as BigIntGuid;
   }
-  public get base64(): Base64Guid {
+  public get asBase64Guid(): Base64Guid {
     return this._value.toString('base64') as Base64Guid;
   }
 }

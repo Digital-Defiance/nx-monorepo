@@ -9,7 +9,7 @@ import StaticHelpersKeyPair from './staticHelpers.keypair';
 import BrightChainMemberType from './memberType';
 import StaticHelpers from './staticHelpers';
 import { KeyPairSyncResult } from 'crypto';
-import GuidV4, { fullHexFromBigInt, FullHexGuid } from './guid';
+import GuidV4, { toFullHexFromBigInt, FullHexGuid } from './guid';
 /**
  * A member of Brightchain.
  * @param id The unique identifier for this member.
@@ -132,13 +132,13 @@ export default class BrightChainMember implements IReadOnlyBasicObject {
     if (id !== undefined) {
       let newGuid: GuidV4;
       try {
-        newGuid = new GuidV4(fullHexFromBigInt(id));
+        newGuid = new GuidV4(toFullHexFromBigInt(id));
       } catch (e) {
         throw new Error('Invalid member ID');
       }
-      this.id = newGuid.bigInt;
+      this.id = newGuid.asBigIntGuid;
     } else {
-      this.id = GuidV4.new().bigInt;
+      this.id = GuidV4.new().asBigIntGuid;
     }
     this.name = name;
     if (!this.name || this.name.length == 0) {
@@ -180,7 +180,7 @@ export default class BrightChainMember implements IReadOnlyBasicObject {
   }
 
   public get uuid(): FullHexGuid {
-    return fullHexFromBigInt(this.id);
+    return toFullHexFromBigInt(this.id);
   }
 
   /**
@@ -345,7 +345,7 @@ export default class BrightChainMember implements IReadOnlyBasicObject {
       contactEmail,
       StaticHelpersKeyPair.getSigningKeyInfoFromKeyPair(keyPair.signing),
       keyPair.data,
-      new GuidV4(newId).bigInt
+      new GuidV4(newId).asBigIntGuid
     );
   }
 }

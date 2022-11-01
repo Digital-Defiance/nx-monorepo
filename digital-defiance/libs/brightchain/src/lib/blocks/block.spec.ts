@@ -9,9 +9,13 @@ import BlockSize, { blockSizeToLength, blockSizes } from './blockSizes';
 import {
   IBreadCrumbTrace,
   HanselGretelBreadCrumbTrail,
-} from '../HanselGretelBreadCrumbTrail';
+} from '../debug/HanselGretelBreadCrumbTrail';
 const traceLog: Array<IBreadCrumbTrace> = [];
-const pTrace = HanselGretelBreadCrumbTrail.addCrumb(true, traceLog, 'block.spec.ts');
+const pTrace = HanselGretelBreadCrumbTrail.addCrumb(
+  true,
+  traceLog,
+  'block.spec.ts'
+);
 
 function randomBlockSize(): BlockSize {
   pTrace.forkAndAddCrumb('randomBlockSize');
@@ -130,7 +134,9 @@ describe('block', () => {
             const badChecksum = StaticHelpersChecksum.calculateChecksum(
               Buffer.from(badData)
             );
-            const badChecksumBigInt = BigInt('0x' + badChecksum.toString('hex'));
+            const badChecksumBigInt = BigInt(
+              '0x' + badChecksum.toString('hex')
+            );
             result.addCrumb(
               'block data generated, creating block with checksum mismatch'
             );
