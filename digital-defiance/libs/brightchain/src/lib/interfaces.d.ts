@@ -71,7 +71,7 @@ export interface IBasicDataObject extends IBasicObject {
   /**
    * ID of the data object. checksum of the data.
    */
-  id: bigint;
+  id: string;
   /**
    * The data to be stored
    */
@@ -79,7 +79,7 @@ export interface IBasicDataObject extends IBasicObject {
   /**
    * The ID of the member who created this object
    */
-  createdBy: bigint;
+  createdBy: string;
   /**
    * The date this object was created
    */
@@ -87,15 +87,15 @@ export interface IBasicDataObject extends IBasicObject {
 }
 
 export interface IReadOnlyBasicObject extends IBasicObject {
-  readonly id: bigint;
+  readonly id: string;
   readonly dateCreated: Date;
 }
 
 export interface IReadOnlyDataObject
   extends IBasicDataObject,
     IReadOnlyBasicObject {
-  readonly id: bigint; // checksum
+  readonly id: string; // checksum
   readonly data: Uint8Array;
-  readonly createdBy: bigint;
+  readonly createdBy: string;
   readonly dateCreated: Date;
 }

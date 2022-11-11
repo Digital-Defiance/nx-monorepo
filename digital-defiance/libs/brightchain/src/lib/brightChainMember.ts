@@ -116,6 +116,7 @@ export default class BrightChainMember implements IReadOnlyBasicObject {
   public readonly memberType: BrightChainMemberType;
   public readonly name: string;
   public readonly contactEmail: string;
+  public readonly creatorId: bigint;
   public readonly dateCreated: Date;
   public readonly dateUpdated: Date;
   constructor(
@@ -126,7 +127,8 @@ export default class BrightChainMember implements IReadOnlyBasicObject {
     dataKeyPair?: ISimpleKeyPairBuffer,
     id?: bigint,
     dateCreated?: Date,
-    dateUpdated?: Date
+    dateUpdated?: Date,
+    creatorId?: bigint,
   ) {
     this.memberType = memberType;
     if (id !== undefined) {
@@ -177,6 +179,7 @@ export default class BrightChainMember implements IReadOnlyBasicObject {
     };
     this.dateCreated = dateCreated ?? now();
     this.dateUpdated = dateUpdated ?? now();
+    this.creatorId = creatorId ?? this.id;
   }
 
   public get uuid(): FullHexGuid {
@@ -346,6 +349,46 @@ export default class BrightChainMember implements IReadOnlyBasicObject {
       StaticHelpersKeyPair.getSigningKeyInfoFromKeyPair(keyPair.signing),
       keyPair.data,
       new GuidV4(newId).asBigIntGuid
+    );
+  }
+
+  toJSON(): string {
+    return JSON.stringify({
+      id: this.id.toString(16),
+      type: this.memberType,
+      name: this.name,
+      contactEmail: this.contactEmail,
+      signingKeyPair: this.signingKeyPair,
+      dataKeyPair: this.dataKeyPair,
+      createdBy: this.creatorId.toString(16),
+      dateCreated: this.dateCreated,
+      dateUpdated: this.dateUpdated,
+    });
+  }
+  fromJSON(json: string): BrightChainMember {
+    const parsedMember = JSON.parse(json) as {
+      id: bigint;
+      type: BrightChainMemberType;
+      name: string;
+      contactEmail: string;
+      signingKeyPair: ISigningKeyInfo;
+      dataKeyPair: ISimpleKeyPairBuffer;
+      createdBy: bigint;
+      dateCreated: Date;
+      dateUpdated: Date;
+    };
+    console.log('parsedMember', parsedMember);
+    
+    return new BrightChainMember(
+      parsedMember.type,
+      parsedMember.name,
+      parsedMember.contactEmail,
+      parsedMember.signingKeyPair,
+      parsedMember.dataKeyPair,
+      parsedMember.id,
+      parsedMember.dateCreated,
+      parsedMember.dateUpdated,
+      parsedMember.createdBy,
     );
   }
 }

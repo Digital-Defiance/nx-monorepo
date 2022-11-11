@@ -34,10 +34,11 @@ export default abstract class StaticHelpersSymmetric {
     encryptionKey?: Buffer,
     useBuffer?: boolean
   ): ISymmetricEncryptionResults {
+    const hasToJSON = data && typeof data === 'object' && (data as any).toJSON;
     const dataBuffer =
       useBuffer === true && Buffer.isBuffer(data)
         ? data
-        : Buffer.from(JSON.stringify(data), 'utf8');
+        : Buffer.from(hasToJSON ? (data as any).toJSON() : JSON.stringify(data), 'utf8');
     if (
       encryptionKey &&
       encryptionKey.length != StaticHelpersKeyPair.SymmetricKeyBytes

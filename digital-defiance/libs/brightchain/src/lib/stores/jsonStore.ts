@@ -46,6 +46,7 @@ export default class JsonStore<K> implements IJsonStore<K> {
    * @param value 
    */
   public set<V>(key: K, value: V): void {
-    this._data.set(key, JSON.stringify(value));
+    const hasToJSON = value && typeof value === 'object' && (value as any).toJSON;
+    this._data.set(key, hasToJSON ? (value as any).toJSON() : JSON.stringify(value));
   }
 }

@@ -26,6 +26,7 @@ export default class Block implements IReadOnlyDataObject {
     }
     this.dateCreated = dateCreated ?? new Date();
   }
+
   public readonly id: bigint;
   public get blockSize(): BlockSize {
     return lengthToBlockSize(this.data.length);

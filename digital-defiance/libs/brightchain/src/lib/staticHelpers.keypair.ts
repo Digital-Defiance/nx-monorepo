@@ -563,18 +563,12 @@ export default abstract class StaticHelpersKeyPair {
    * Encrypt data with AES
    * @param data
    * @param encryptionKey
-   * @param useBuffer
    * @returns
    */
-  public static symmetricEncrypt<T>(
-    data: T,
+  public static symmetricEncryptBuffer(
+    data: Buffer,
     encryptionKey?: Buffer,
-    useBuffer?: boolean
   ): ISymmetricEncryptionResults {
-    const dataBuffer =
-      useBuffer === true && Buffer.isBuffer(data)
-        ? data
-        : Buffer.from(JSON.stringify(data), 'utf8');
     if (
       encryptionKey &&
       encryptionKey.length != StaticHelpersKeyPair.SymmetricKeyBytes
@@ -593,7 +587,7 @@ export default abstract class StaticHelpersKeyPair {
       ivBuffer
     );
 
-    const ciphertextBuffer = cipher.update(dataBuffer);
+    const ciphertextBuffer = cipher.update(data);
     const encryptionIvPlusData = Buffer.concat([
       ivBuffer,
       ciphertextBuffer,
@@ -629,21 +623,6 @@ export default abstract class StaticHelpersKeyPair {
     );
     const decryptedDataBuffer = decipher.update(ciphertextBuffer);
     return decryptedDataBuffer;
-  }
-
-  /**
-   * Decrypt the given buffer with AES, treat as JSON and cast to a type
-   * @param encryptedData
-   * @param key
-   * @returns
-   */
-  public static symmetricDecrypt<T>(encryptedData: Buffer, key: Buffer): T {
-    return JSON.parse(
-      StaticHelpersSymmetric.symmetricDecryptBuffer(
-        encryptedData,
-        key
-      ).toString()
-    ) as T;
   }
 
   public static seal<T>(data: T, publicKey: Buffer): ISealResults {
