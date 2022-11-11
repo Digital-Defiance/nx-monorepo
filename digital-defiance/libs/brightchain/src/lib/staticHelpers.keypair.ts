@@ -537,7 +537,7 @@ export default abstract class StaticHelpersKeyPair {
     member: BrightChainMember
   ): string {
     return StaticHelpersKeyPair.signingKeyPairToDataKeyPassphraseFromMemberId(
-      member.uuid,
+      member.id,
       member.signingKeyPair
     );
   }

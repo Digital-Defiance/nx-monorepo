@@ -34,7 +34,7 @@ describe('brightchain', () => {
           'alice@example.com',
           undefined,
           undefined,
-          BigInt(1)
+          'x'
         )
     ).toThrowError('Invalid member ID');
   });
@@ -98,9 +98,6 @@ describe('brightchain', () => {
     ).toBeTruthy();
   });
   it('should fail to create with a made up id', () => {
-    const randId = BigInt('0x' + "0".repeat(32));
-
-    // most if not all 16 byte values are valid. this test may be useless
     expect(
       () =>
         new BrightChainMember(
@@ -109,7 +106,7 @@ describe('brightchain', () => {
           'alice@example.com',
           undefined,
           undefined,
-          randId
+          "x"
         )
     ).toThrowError('Invalid member ID');
   });

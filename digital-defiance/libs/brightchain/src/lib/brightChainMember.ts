@@ -1,7 +1,7 @@
 import * as uuid from 'uuid';
 import { ec as EC } from 'elliptic';
 import {
-  IReadOnlyBasicObject,
+  IReadOnlyBasicObjectDTO,
   ISigningKeyInfo,
   ISimpleKeyPairBuffer,
 } from './interfaces';
@@ -15,7 +15,7 @@ import GuidV4, { toFullHexFromBigInt, FullHexGuid } from './guid';
  * @param id The unique identifier for this member.
  * @param name The name of this member.
  */
-export default class BrightChainMember implements IReadOnlyBasicObject {
+export default class BrightChainMember implements IReadOnlyBasicObjectDTO {
   /**
    * Signatures and verification are done using the signing key pair.
    * The key pair may or may not be loaded.
@@ -112,11 +112,11 @@ export default class BrightChainMember implements IReadOnlyBasicObject {
     return this._dataKeyPair.privateKey;
   }
 
-  public readonly id: bigint;
+  public readonly id: FullHexGuid;
   public readonly memberType: BrightChainMemberType;
   public readonly name: string;
   public readonly contactEmail: string;
-  public readonly creatorId: bigint;
+  public readonly creatorId: FullHexGuid;
   public readonly dateCreated: Date;
   public readonly dateUpdated: Date;
   constructor(
@@ -125,22 +125,22 @@ export default class BrightChainMember implements IReadOnlyBasicObject {
     contactEmail: string,
     signingKeyPair?: ISimpleKeyPairBuffer,
     dataKeyPair?: ISimpleKeyPairBuffer,
-    id?: bigint,
+    id?: string,
     dateCreated?: Date,
     dateUpdated?: Date,
-    creatorId?: bigint,
+    creatorId?: FullHexGuid,
   ) {
     this.memberType = memberType;
     if (id !== undefined) {
       let newGuid: GuidV4;
       try {
-        newGuid = new GuidV4(toFullHexFromBigInt(id));
+        newGuid = new GuidV4(id);
       } catch (e) {
         throw new Error('Invalid member ID');
       }
-      this.id = newGuid.asBigIntGuid;
+      this.id = newGuid.asFullHexGuid;
     } else {
-      this.id = GuidV4.new().asBigIntGuid;
+      this.id = GuidV4.new().asFullHexGuid;
     }
     this.name = name;
     if (!this.name || this.name.length == 0) {
@@ -180,10 +180,6 @@ export default class BrightChainMember implements IReadOnlyBasicObject {
     this.dateCreated = dateCreated ?? now();
     this.dateUpdated = dateUpdated ?? now();
     this.creatorId = creatorId ?? this.id;
-  }
-
-  public get uuid(): FullHexGuid {
-    return toFullHexFromBigInt(this.id);
   }
 
   /**
@@ -284,12 +280,12 @@ export default class BrightChainMember implements IReadOnlyBasicObject {
     // get data private key with current passphrase, convert to new passphrase
     const currentSigningKeyPassphrase =
       StaticHelpersKeyPair.signingKeyPairToDataKeyPassphraseFromMemberId(
-        this.uuid,
+        this.id,
         this.signingKeyPair
       );
     const newSigningKeyPassphrase =
       StaticHelpersKeyPair.signingKeyPairToDataKeyPassphraseFromMemberId(
-        this.uuid,
+        this.id,
         newSigningKeyPair.keyPair
       );
 
@@ -348,32 +344,32 @@ export default class BrightChainMember implements IReadOnlyBasicObject {
       contactEmail,
       StaticHelpersKeyPair.getSigningKeyInfoFromKeyPair(keyPair.signing),
       keyPair.data,
-      new GuidV4(newId).asBigIntGuid
+      new GuidV4(newId).asFullHexGuid
     );
   }
 
   toJSON(): string {
     return JSON.stringify({
-      id: this.id.toString(16),
+      id: this.id,
       type: this.memberType,
       name: this.name,
       contactEmail: this.contactEmail,
       signingKeyPair: this.signingKeyPair,
       dataKeyPair: this.dataKeyPair,
-      createdBy: this.creatorId.toString(16),
+      createdBy: this.creatorId as string,
       dateCreated: this.dateCreated,
       dateUpdated: this.dateUpdated,
     });
   }
   fromJSON(json: string): BrightChainMember {
     const parsedMember = JSON.parse(json) as {
-      id: bigint;
+      id: string;
       type: BrightChainMemberType;
       name: string;
       contactEmail: string;
       signingKeyPair: ISigningKeyInfo;
       dataKeyPair: ISimpleKeyPairBuffer;
-      createdBy: bigint;
+      createdBy: string;
       dateCreated: Date;
       dateUpdated: Date;
     };
@@ -388,7 +384,7 @@ export default class BrightChainMember implements IReadOnlyBasicObject {
       parsedMember.id,
       parsedMember.dateCreated,
       parsedMember.dateUpdated,
-      parsedMember.createdBy,
+      parsedMember.createdBy as FullHexGuid,
     );
   }
 }
