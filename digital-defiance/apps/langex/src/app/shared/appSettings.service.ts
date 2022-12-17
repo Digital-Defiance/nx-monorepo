@@ -1,18 +1,14 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import MessageContext from 'libs/langex-core/src/lib/messageContext';
-import { SettingsManager } from 'libs/langex-core/src/lib/settingsManager';
-
-const settingsManager: SettingsManager = new SettingsManager(
-  MessageContext.Extension
-);
-settingsManager.loadGlobalSettings();
+import { MessageContext, SettingsManager } from '@digital-defiance/langex-core';
 
 @Injectable()
 export class AppSettingsService {
+  private static readonly _settingsManager: SettingsManager =
+    new SettingsManager(MessageContext.Extension);
   getSettingsManager(): Observable<SettingsManager> {
     return new Observable((observer) => {
-      observer.next(settingsManager);
+      observer.next(AppSettingsService._settingsManager);
     });
   }
 }

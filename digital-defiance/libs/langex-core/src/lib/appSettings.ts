@@ -3,6 +3,12 @@ import StorageOption from './storageOption';
 import PreferredVoiceGender from './preferredVoiceGender';
 import SpeechSources from './speechSources';
 import WordMastery from './wordMastery';
+import {
+  getKeyIdentifier,
+  storageGetKey,
+  storageSetKey,
+} from './chromeStorage';
+import { SettingsManager } from './settingsManager';
 
 /**
  * Settings stored in synced storage for the application
@@ -43,18 +49,151 @@ export default class AppSettings implements ISettings {
     defaultStudiedLanguages: string[] = ['uk', 'ru'],
     defaultSpeechSources: SpeechSources[] = [SpeechSources.WebSpeechAPI]
   ) {
-    this.lingvoApiKey = '';
-    this.lingvoApiEnabled = false;
-    this.forvoApiKey = '';
-    this.forvoApiEnabled = false;
-    this.googleApiKey = '';
-    this.googleApiEnabled = false;
-    this.preferredVoiceGender = PreferredVoiceGender.Either;
-    this.primaryLanguage = primaryLanguage;
-    this.primaryLocale = primaryLocale;
-    this.storeAudio = StorageOption.None;
-    this.studiedLanguages = defaultStudiedLanguages;
-    this.speechSources = defaultSpeechSources;
-    this.wordMasteryColors = DefaultWordMasteryColors;
+    this.forvoApiEnabled =
+      storageGetKey(
+        getKeyIdentifier(SettingsManager.settingsKey, 'forvoApiEnabled'),
+        StorageOption.SyncedStorage
+      ) || false;
+    this.forvoApiKey =
+      storageGetKey(
+        getKeyIdentifier(SettingsManager.settingsKey, 'forvoApiKey'),
+        StorageOption.SyncedStorage
+      ) || '';
+    this.googleApiEnabled =
+      storageGetKey(
+        getKeyIdentifier(SettingsManager.settingsKey, 'googleApiEnabled'),
+        StorageOption.SyncedStorage
+      ) || false;
+    this.googleApiKey =
+      storageGetKey(
+        getKeyIdentifier(SettingsManager.settingsKey, 'googleApiKey'),
+        StorageOption.SyncedStorage
+      ) || '';
+    this.lingvoApiEnabled =
+      storageGetKey(
+        getKeyIdentifier(SettingsManager.settingsKey, 'lingvoApiEnabled'),
+        StorageOption.SyncedStorage
+      ) || false;
+    this.lingvoApiKey =
+      storageGetKey(
+        getKeyIdentifier(SettingsManager.settingsKey, 'lingvoApiKey'),
+        StorageOption.SyncedStorage
+      ) || '';
+    this.preferredVoiceGender =
+      storageGetKey(
+        getKeyIdentifier(SettingsManager.settingsKey, 'preferredVoiceGender'),
+        StorageOption.SyncedStorage
+      ) || PreferredVoiceGender.Either;
+    this.primaryLanguage =
+      storageGetKey(
+        getKeyIdentifier(SettingsManager.settingsKey, 'primaryLanguage'),
+        StorageOption.SyncedStorage
+      ) || primaryLanguage;
+    this.primaryLocale =
+      storageGetKey(
+        getKeyIdentifier(SettingsManager.settingsKey, 'primaryLocale'),
+        StorageOption.SyncedStorage
+      ) || primaryLocale;
+    this.speechSources =
+      storageGetKey(
+        getKeyIdentifier(SettingsManager.settingsKey, 'speechSources'),
+        StorageOption.SyncedStorage
+      ) || defaultSpeechSources;
+    this.storeAudio =
+      storageGetKey(
+        getKeyIdentifier(SettingsManager.settingsKey, 'storeAudio'),
+        StorageOption.SyncedStorage
+      ) || StorageOption.None;
+    this.studiedLanguages =
+      storageGetKey(
+        getKeyIdentifier(SettingsManager.settingsKey, 'studiedLanguages'),
+        StorageOption.SyncedStorage
+      ) || defaultStudiedLanguages;
+    this.wordMasteryColors =
+      storageGetKey(
+        getKeyIdentifier(SettingsManager.settingsKey, 'wordMasteryColors'),
+        StorageOption.SyncedStorage
+      ) || DefaultWordMasteryColors;
+  }
+  public save(): void {
+    storageSetKey(
+      getKeyIdentifier(SettingsManager.settingsKey, 'forvoApiEnabled'),
+      this.forvoApiEnabled,
+      StorageOption.SyncedStorage
+    );
+    storageSetKey(
+      getKeyIdentifier(SettingsManager.settingsKey, 'forvoApiKey'),
+      this.forvoApiKey,
+      StorageOption.SyncedStorage
+    );
+    storageSetKey(
+      getKeyIdentifier(SettingsManager.settingsKey, 'googleApiEnabled'),
+      this.googleApiEnabled,
+      StorageOption.SyncedStorage
+    );
+    storageSetKey(
+      getKeyIdentifier(SettingsManager.settingsKey, 'googleApiKey'),
+      this.googleApiKey,
+      StorageOption.SyncedStorage
+    );
+    storageSetKey(
+      getKeyIdentifier(SettingsManager.settingsKey, 'lingvoApiEnabled'),
+      this.lingvoApiEnabled,
+      StorageOption.SyncedStorage
+    );
+    storageSetKey(
+      getKeyIdentifier(SettingsManager.settingsKey, 'lingvoApiKey'),
+      this.lingvoApiKey,
+      StorageOption.SyncedStorage
+    );
+    storageSetKey(
+      getKeyIdentifier(SettingsManager.settingsKey, 'preferredVoiceGender'),
+      this.preferredVoiceGender,
+      StorageOption.SyncedStorage
+    );
+    storageSetKey(
+      getKeyIdentifier(SettingsManager.settingsKey, 'primaryLanguage'),
+      this.primaryLanguage,
+      StorageOption.SyncedStorage
+    );
+    storageSetKey(
+      getKeyIdentifier(SettingsManager.settingsKey, 'primaryLocale'),
+      this.primaryLocale,
+      StorageOption.SyncedStorage
+    );
+    storageSetKey(
+      getKeyIdentifier(SettingsManager.settingsKey, 'storeAudio'),
+      this.storeAudio,
+      StorageOption.SyncedStorage
+    );
+    storageSetKey(
+      getKeyIdentifier(SettingsManager.settingsKey, 'studiedLanguages'),
+      this.studiedLanguages,
+      StorageOption.SyncedStorage
+    );
+    storageSetKey(
+      getKeyIdentifier(SettingsManager.settingsKey, 'speechSources'),
+      this.speechSources,
+      StorageOption.SyncedStorage
+    );
+    storageSetKey(
+      getKeyIdentifier(SettingsManager.settingsKey, 'wordMasteryColors'),
+      this.wordMasteryColors,
+      StorageOption.SyncedStorage
+    );
+  }
+
+  public updateSetting(key: string, value: any, save = false): void {
+    if (!Object.prototype.hasOwnProperty.call(this, key)) {
+      throw new Error(`updateSetting: key ${key} not found`);
+    }
+    (this as any)[key] = value;
+    if (save) {
+      storageSetKey(
+        getKeyIdentifier(SettingsManager.settingsKey, key),
+        value,
+        StorageOption.SyncedStorage
+      );
+    }
   }
 }

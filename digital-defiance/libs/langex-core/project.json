@@ -22,5 +22,5 @@
       }
     }
   },
-  "tags": ["ui"]
+  "tags": ["ui", "scope:langex", "type:library"]
 }
