@@ -81,5 +81,3 @@ export function blockSizeToLength(blockSize: BlockSize): number {
 export function validateBlockSize(length: number): boolean {
   return blockSizeLengths.indexOf(length) >= 1; // ignore 0 = unknown
 }
-
-export default BlockSize;

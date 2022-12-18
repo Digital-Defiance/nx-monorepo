@@ -1,6 +1,5 @@
-import BrightChainMember from 'libs/brightchain/src/lib/brightChainMember';
+import { BrightChainMember, BrightChainMemberType } from '@digital-defiance/brightchain';
 import BrightChainQuorum from './quorum';
-import BrightChainMemberType from 'libs/brightchain/src/lib/memberType';
 describe('quorum', () => {
   it('should create a quorum', () => {
     const nodeOwner = BrightChainMember.newMember(

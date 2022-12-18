@@ -1,4 +1,4 @@
-import SimpleStore from './simpleStore';
+import { SimpleStore } from './simpleStore';
 
 describe('simpleStore', () => {
   it('should be able to store and retrieve a value', () => {

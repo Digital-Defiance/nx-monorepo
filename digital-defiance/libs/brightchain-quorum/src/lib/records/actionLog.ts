@@ -1,8 +1,8 @@
-import { IBasicObject } from 'libs/brightchain/src/lib/interfaces';
-import QuorumDataRecordActionEventType from './actionEvent';
-import QuorumDataRecordActionType from './actionType';
+import { IBasicObjectDTO } from '@digital-defiance/brightchain';
+import { QuorumDataRecordActionEventType } from './actionEvent';
+import { QuorumDataRecordActionType } from './actionType';
 
-export default interface QuorumDataRecordActionLog extends IBasicObject {
+export interface QuorumDataRecordActionLog extends IBasicObjectDTO {
   readonly eventId: string;
   readonly eventType: QuorumDataRecordActionEventType;
   readonly actionTaken: QuorumDataRecordActionType;

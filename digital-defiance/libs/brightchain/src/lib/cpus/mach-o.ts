@@ -2,7 +2,7 @@
 // https://gist.github.com/tadeuzagallo/3853299f033bf9b746e4
 'use strict';
 
-import Registers from './registers';
+import { Registers } from './registers';
 import { X86Cpu } from './x86Cpu';
 
 const LC_SEGMENT = 0x00000001;

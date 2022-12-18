@@ -5,5 +5,3 @@ export enum QuorumDataRecordActionEventType {
   Cancel,
   Override,
 }
-
-export default QuorumDataRecordActionEventType;

@@ -2,8 +2,8 @@ import BN = require('bn.js');
 import { randomBytes } from 'crypto';
 import { ec } from 'elliptic';
 import { Signature } from './signature';
-import StaticHelpersElliptic from './staticHelpers.elliptic';
-import StaticHelpersKeyPair from './staticHelpers.keypair';
+import { StaticHelpersElliptic } from './staticHelpers.elliptic';
+import { StaticHelpersKeyPair } from './staticHelpers.keypair';
 
 describe('brightchain staticHelpers.elliptic', () => {
   it('should convert between EC classes', () => {

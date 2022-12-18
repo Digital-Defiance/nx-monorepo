@@ -1,6 +1,7 @@
-import BrightChainMember from './brightChainMember';
-import BrightChainMemberType from './memberType';
-import StaticHelpers from './staticHelpers';
+import { BrightChainMember } from './brightChainMember';
+import { EmailString } from './emailString';
+import { BrightChainMemberType } from './memberType';
+import { StaticHelpers } from './staticHelpers';
 
 describe('staticHelpers', () => {
   it('should correctly write a value to a buffer 255', () => {
@@ -33,17 +34,17 @@ describe('staticHelpers', () => {
     const alice = BrightChainMember.newMember(
       BrightChainMemberType.User,
       'alice',
-      'alice@example.com'
+      new EmailString('alice@example.com')
     );
     const bob = BrightChainMember.newMember(
       BrightChainMemberType.Admin,
       'bob',
-      'bob@example.com'
+      new EmailString('bob@example.com')
     );
     const charlie = BrightChainMember.newMember(
       BrightChainMemberType.System,
       'charlie',
-      'charlie@example.com'
+      new EmailString('charlie@example.com')
     );
 
     expect(StaticHelpers.membersAreAllUsers([alice, bob])).toEqual(true);

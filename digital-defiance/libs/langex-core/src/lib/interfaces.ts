@@ -4,6 +4,7 @@ import MessageType from './messageType';
 import PreferredVoiceGender from './preferredVoiceGender';
 import SpeechSources from './speechSources';
 import WordMastery from './wordMastery';
+import UrlFilterMethod from './urlFilterMethod';
 
 export interface WordMasteryStatus {
   word: string;
@@ -67,10 +68,10 @@ export interface ISettings {
  * Settings stored in browser local storage only (not global sync)
  */
 export interface ILocalSettings {
-  readonly includedSites: string[];
-  readonly excludedSites: string[];
-  readonly onByDefault: boolean;
-  readonly extensionEnabled: boolean;
+  filterMethod: UrlFilterMethod;
+  includedSites: string[];
+  excludedSites: string[];
+  extensionEnabled: boolean;
 }
 
 export interface IChromeMessage {

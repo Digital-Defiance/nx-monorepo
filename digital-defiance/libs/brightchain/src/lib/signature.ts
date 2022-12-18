@@ -4,7 +4,7 @@
 
 import * as BN from 'bn.js';
 import * as minUtils from './minimalisticUtils';
-import StaticHelpersElliptic from './staticHelpers.elliptic';
+import { StaticHelpersElliptic } from './staticHelpers.elliptic';
 
 export interface ISignature {
   r: BN;

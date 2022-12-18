@@ -1,3 +1,6 @@
+export * from './lib/brightChainMember';
+export * from './lib/memberType';
+export * from './lib/guid';
 export * from './lib/blocks/block';
 export * from './lib/stores/bufferStore';
 export * from './lib/stores/jsonStore';

@@ -1,22 +1,27 @@
 import { randomBytes, randomUUID } from 'crypto';
-import BrightChainMember from './brightChainMember';
-import BrightChainMemberType from './memberType';
-import StaticHelpersKeyPair from './staticHelpers.keypair';
+import { BrightChainMember } from './brightChainMember';
+import { EmailString } from './emailString';
+import { GuidV4, ShortHexGuid } from './guid';
+import { MemberKeyType } from './keys/memberKeyType';
+import { StoredMemberKey } from './keys/storedMemberKey';
+import { BrightChainMemberType } from './memberType';
+import { StaticHelpersKeyPair } from './staticHelpers.keypair';
+import { MemberKeyStore } from './stores/memberKeyStore';
 describe('brightchain', () => {
   const alice = BrightChainMember.newMember(
     BrightChainMemberType.User,
     'Alice Smith',
-    'alice@example.com'
+    new EmailString('alice@example.com')
   );
   const bob = BrightChainMember.newMember(
     BrightChainMemberType.User,
     'Bob Smith',
-    'bob@example.com'
+    new EmailString('bob@example.com')
   );
   const noKeyCharlie = new BrightChainMember(
     BrightChainMemberType.User,
     'Charlie Smith',
-    'charlie@example.com'
+    new EmailString('charlie@example.com')
   );
   it('should sign and verify a message for a member', () => {
     const message = Buffer.from('hello world');
@@ -31,10 +36,9 @@ describe('brightchain', () => {
         new BrightChainMember(
           BrightChainMemberType.User,
           'alice',
-          'alice@example.com',
+          new EmailString('alice@example.com'),
           undefined,
-          undefined,
-          'x'
+          'x' as ShortHexGuid
         )
     ).toThrowError('Invalid member ID');
   });
@@ -53,27 +57,30 @@ describe('brightchain', () => {
     const dwight = BrightChainMember.newMember(
       BrightChainMemberType.User,
       'Dwight Smith',
-      'dwight@example.com'
+      new EmailString('dwight@example.com')
     );
-    expect(dwight.dataKeyPair).toBeTruthy();
-    dwight.unloadDataKeyPair();
-    expect(() => dwight.dataKeyPair).toThrowError('Data key pair not set');
-    expect(dwight.signingKeyPair).toBeTruthy();
-    dwight.unloadSigningKeyPair();
-    expect(() => dwight.signingKeyPair).toThrowError(
-      'Signing key pair not set'
-    );
+    expect(dwight.hasKey(MemberKeyType.Encryption)).toBeTruthy();
+    dwight.unloadKeyPair(MemberKeyType.Encryption);
+    expect(() => dwight.hasKey(MemberKeyType.Encryption)).toBeFalsy();
+    expect(dwight.getKey(MemberKeyType.Encryption)).toBeTruthy();
+    dwight.unloadKeyPair(MemberKeyType.Signing);
+    expect(() => dwight.hasKey(MemberKeyType.Signing)).toBeFalsy();
   });
   it('should fail if we swap out the signing keys without re-encrypting the data key', () => {
     const edith = BrightChainMember.newMember(
       BrightChainMemberType.User,
       'Edith Smith',
-      'edith@example.com'
+      new EmailString('edith@example.com')
     );
 
     const newSigningKeyPair = StaticHelpersKeyPair.generateSigningKeyPair();
     edith.loadSigningKeyPair(newSigningKeyPair);
-    expect(() => edith.loadDataKeyPair(edith.dataKeyPair)).toThrowError(
+    const edithKey = edith.getKey(MemberKeyType.Encryption);
+    expect(edithKey).toBeInstanceOf(StoredMemberKey);
+    if (!(edithKey instanceof StoredMemberKey)) {
+      throw new Error('Not a StoredMemberKey');
+    }
+    expect(() => edith.loadDataKeyPair(edithKey)).toThrowError(
       'Unable to challenge data key pair with mneomonic from signing key pair'
     );
   });
@@ -82,18 +89,23 @@ describe('brightchain', () => {
     const frank = BrightChainMember.newMember(
       BrightChainMemberType.User,
       'Frank Smith',
-      'frank@example.com'
+      new EmailString('frank@example.com')
     );
 
     const newSigningKeyPair = frank.rekeySigningKeyPair();
-    expect(frank.signingKeyPair).toEqual(newSigningKeyPair.keyPair);
+    const frankKey = frank.getKey(MemberKeyType.Signing);
+    expect(frankKey).toBeInstanceOf(StoredMemberKey);
+    if (!(frankKey instanceof StoredMemberKey)) {
+      throw new Error('Not a StoredMemberKey');
+    }
+    expect(frankKey.toECKeyPair()).toEqual(newSigningKeyPair.keyPair);
     expect(
       StaticHelpersKeyPair.challengeSigningKeyPair(newSigningKeyPair.keyPair)
     ).toBeTruthy();
     expect(
       StaticHelpersKeyPair.challengeDataKeyPair(
-        frank.dataKeyPair,
-        StaticHelpersKeyPair.signingKeyPairToDataKeyPassphraseFromMember(frank)
+        frankKey,
+        Buffer.from(StaticHelpersKeyPair.signingKeyPairToDataKeyPassphraseFromMember(frank))
       )
     ).toBeTruthy();
   });
@@ -103,10 +115,9 @@ describe('brightchain', () => {
         new BrightChainMember(
           BrightChainMemberType.User,
           'alice',
-          'alice@example.com',
+          new EmailString('alice@example.com'),
           undefined,
-          undefined,
-          'x'
+          'x' as ShortHexGuid
         )
     ).toThrowError('Invalid member ID');
   });
@@ -115,7 +126,7 @@ describe('brightchain', () => {
       BrightChainMember.newMember(
         BrightChainMemberType.User,
         '',
-        'alice@example.com'
+        new EmailString('alice@example.com')
       )
     ).toThrowError('Member name missing');
   });
@@ -124,20 +135,20 @@ describe('brightchain', () => {
       BrightChainMember.newMember(
         BrightChainMemberType.User,
         'alice ',
-        'alice@example.com'
+        new EmailString('alice@example.com')
       )
     ).toThrowError('Member name has leading or trailing spaces');
     expect(() =>
       BrightChainMember.newMember(
         BrightChainMemberType.User,
         ' alice',
-        'alice@example.com'
+        new EmailString('alice@example.com')
       )
     ).toThrowError('Member name has leading or trailing spaces');
   });
   it('should fail to create a user with no email', () => {
     expect(() =>
-      BrightChainMember.newMember(BrightChainMemberType.User, 'alice', '')
+      BrightChainMember.newMember(BrightChainMemberType.User, 'alice', new EmailString(''))
     ).toThrowError('Member email missing');
   });
   it('should fail to create a user with an email that has whitespace at the start or end', () => {
@@ -145,69 +156,82 @@ describe('brightchain', () => {
       BrightChainMember.newMember(
         BrightChainMemberType.User,
         'alice',
-        ' alice@example.com'
+        new EmailString(' alice@example.com')
       )
-    ).toThrowError('Member email has leading or trailing spaces');
+    ).toThrowError('Eail has leading or trailing spaces');
     expect(() =>
       BrightChainMember.newMember(
         BrightChainMemberType.User,
         'alice',
-        'alice@example.com '
+        new EmailString('alice@example.com ')
       )
-    ).toThrowError('Member email has leading or trailing spaces');
+    ).toThrowError('Email has leading or trailing spaces');
   });
   it('should fail to create a user with an invalid email', () => {
     expect(() => {
-      BrightChainMember.newMember(BrightChainMemberType.User, 'Nope', 'x!foo');
-    }).toThrowError('Member email is invalid');
+      BrightChainMember.newMember(BrightChainMemberType.User, 'Nope', new EmailString('x!foo'));
+    }).toThrowError('Email is invalid');
   });
   it('should check whether a user has a data key pair', () => {
-    expect(bob.hasDataPrivateKey).toEqual(true);
-    expect(bob.hasDataKeyPair).toEqual(true);
-    expect(noKeyCharlie.hasDataKeyPair).toEqual(false);
-    expect(noKeyCharlie.hasDataPrivateKey).toEqual(false);
+    expect(bob.hasKey(MemberKeyType.Encryption)).toEqual(true);
+    expect(bob.hasPrivateKey(MemberKeyType.Encryption)).toEqual(true);
+    expect(noKeyCharlie.hasKey(MemberKeyType.Encryption)).toEqual(false);
+    expect(noKeyCharlie.hasPrivateKey(MemberKeyType.Encryption)).toEqual(false);
   });
   it('should check whether a user has a signing key pair', () => {
-    expect(alice.hasSigningKeyPair).toEqual(true);
-    expect(alice.hasSigningPrivateKey).toEqual(true);
-    expect(noKeyCharlie.hasSigningKeyPair).toEqual(false);
-    expect(noKeyCharlie.hasSigningPrivateKey).toEqual(false);
+    expect(alice.hasKey(MemberKeyType.Encryption)).toEqual(true);
+    expect(alice.hasPrivateKey(MemberKeyType.Encryption)).toEqual(true);
+    expect(noKeyCharlie.hasKey(MemberKeyType.Signing)).toEqual(false);
+    expect(noKeyCharlie.hasPrivateKey(MemberKeyType.Signing)).toEqual(false);
   });
   it('should throw with an invalid signing key', () => {
-    const newId = randomUUID();
+    const newId = new GuidV4(randomUUID()).asShortHexGuid;
     const keyPair = StaticHelpersKeyPair.generateMemberKeyPairs(newId);
+    const keyStore = new MemberKeyStore();
+    keyStore.set(
+      MemberKeyType.Signing,
+      StoredMemberKey.newSigningKey(
+        Buffer.from(keyPair.signing.getPublic('hex')),
+        Buffer.alloc(0))
+    );
+    keyStore.set(
+      MemberKeyType.Encryption,
+      StoredMemberKey.newEncryptionKey(
+        keyPair.data.publicKey,
+        keyPair.data.privateKey)
+    );
     expect(() => {
       new BrightChainMember(
         BrightChainMemberType.User,
         'alice',
-        'alice@example.com',
-        {
-          publicKey: Buffer.from(keyPair.signing.getPublic('hex'), 'hex'),
-          privateKey: Buffer.from([]),
-        },
-        {
-          publicKey: keyPair.data.publicKey,
-          privateKey: keyPair.data.privateKey,
-        }
+        new EmailString('alice@example.com'),
+        keyStore
       );
     }).toThrowError('Invalid key pair');
   });
   it('should throw with an invalid data key', () => {
-    const newId = randomUUID();
+    const newId = new GuidV4(randomUUID()).asShortHexGuid;
     const keyPair = StaticHelpersKeyPair.generateMemberKeyPairs(newId);
+    const keyStore = new MemberKeyStore();
+    keyStore.set(
+      MemberKeyType.Signing,
+      StoredMemberKey.newSigningKey(
+        Buffer.from(keyPair.signing.getPublic('hex'), 'hex'),
+        Buffer.from(keyPair.signing.getPrivate('hex'), 'hex')
+      ));
+    keyStore.set(
+      MemberKeyType.Encryption,
+      StoredMemberKey.newEncryptionKey(
+        keyPair.data.publicKey,
+        Buffer.alloc(0)
+      ));
+        
     expect(() => {
       new BrightChainMember(
         BrightChainMemberType.User,
         'alice',
-        'alice@example.com',
-        {
-          publicKey: Buffer.from(keyPair.signing.getPublic('hex'), 'hex'),
-          privateKey: Buffer.from(keyPair.signing.getPrivate('hex'), 'hex'),
-        },
-        {
-          publicKey: keyPair.data.publicKey,
-          privateKey: Buffer.from([]),
-        }
+        new EmailString('alice@example.com'),
+        keyStore
       );
     }).toThrowError(
       'Unable to challenge data key pair with mneomonic from signing key pair'

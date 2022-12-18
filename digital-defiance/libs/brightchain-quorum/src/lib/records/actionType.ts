@@ -5,5 +5,3 @@ export enum QuorumDataRecordActionType {
   ValidateHeldKeys,
   ValidateRecordIntegrity,
 }
-
-export default QuorumDataRecordActionType;

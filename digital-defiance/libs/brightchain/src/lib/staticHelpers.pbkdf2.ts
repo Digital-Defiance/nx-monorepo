@@ -1,6 +1,6 @@
 import { randomBytes, pbkdf2Sync } from 'crypto';
 import { IPbkdf2Result, IPbkf2Config } from './interfaces';
-import StaticHelpersKeyPair from './staticHelpers.keypair';
+import { StaticHelpersKeyPair } from './staticHelpers.keypair';
 
 /**
  * @description
@@ -11,7 +11,7 @@ import StaticHelpersKeyPair from './staticHelpers.keypair';
  * - Uses crypto for AES encryption
  * - Uses crypto for RSA key generation, encryption/decryption
  */
-export default abstract class StaticHelpersPbkdf2 {
+export abstract class StaticHelpersPbkdf2 {
   /**
    * Number of pbkdf2 iterations per second when hashing a password.
    */
@@ -93,7 +93,7 @@ export default abstract class StaticHelpersPbkdf2 {
    * @returns
    */
   public static deriveKeyFromPassword(
-    password: string,
+    password: Buffer,
     salt?: Buffer,
     iterations?: number
   ): IPbkdf2Result {
@@ -112,10 +112,11 @@ export default abstract class StaticHelpersPbkdf2 {
     if (hashBytes.length !== config.hashBytes) {
       throw new Error('Hash length does not match expected length');
     }
-    return {
+    const result: IPbkdf2Result = {
       salt: saltBytes,
       hash: hashBytes,
       iterations: config.iterations,
     };
+    return result;
   }
 }

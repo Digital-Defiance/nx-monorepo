@@ -1,4 +1,5 @@
-import BlockSize, {
+import {
+  BlockSize,
   lengthToBlockSize,
   blockSizeToLength,
   validateBlockSize,

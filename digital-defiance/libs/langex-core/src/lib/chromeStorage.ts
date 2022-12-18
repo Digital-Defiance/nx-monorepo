@@ -30,3 +30,41 @@ export function storageGetKey(key: string, storageType: StorageOption): any {
   }
   return value;
 }
+
+export function getKeyIdentifier(key: string, ...args: string[]): string {
+  // if no additional arguments, no trailing _ will be added
+  const trailing = args.length > 0 ? `_${args.join('_')}` : '';
+  return `${key}${trailing}`;
+}
+
+/**
+ * @param key
+ * @param value
+ */
+export function saveExtraData<T>(
+  key: string,
+  value: T,
+  ...extraKeyArgs: string[]
+): void {
+  const keyIdentifier = getKeyIdentifier(key, ...extraKeyArgs);
+  chrome.storage.sync.set({ [keyIdentifier]: JSON.stringify(value) });
+}
+
+export function loadExtraData<T>(
+  key: string,
+  ...extraKeyArgs: string[]
+): T | null {
+  const keyIdentifier = getKeyIdentifier(key, ...extraKeyArgs);
+  let value: T | null = null;
+  chrome.storage.sync.get(keyIdentifier, (items: { [key: string]: any }) => {
+    if (items[keyIdentifier]) {
+      value = JSON.parse(items[keyIdentifier] as string);
+    }
+  });
+  return value;
+}
+
+export function removeExtraData(key: string, ...extraKeyArgs: string[]): void {
+  const keyIdentifier = getKeyIdentifier(key, ...extraKeyArgs);
+  chrome.storage.sync.remove(keyIdentifier);
+}

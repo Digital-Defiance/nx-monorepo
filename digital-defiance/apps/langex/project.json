@@ -92,5 +92,5 @@
       }
     }
   },
-  "tags": []
+  "tags": ["scope:langex", "type:application"]
 }

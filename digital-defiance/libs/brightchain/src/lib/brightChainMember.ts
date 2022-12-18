@@ -1,134 +1,46 @@
 import * as uuid from 'uuid';
 import { ec as EC } from 'elliptic';
 import {
+  IMemberDTO,
   IReadOnlyBasicObjectDTO,
-  ISigningKeyInfo,
+  ISigningKeyPrivateKeyInfo,
   ISimpleKeyPairBuffer,
+  ISimplePublicKeyOnlyBuffer,
+  IStoredMemberKeyDTO,
 } from './interfaces';
-import StaticHelpersKeyPair from './staticHelpers.keypair';
-import BrightChainMemberType from './memberType';
-import StaticHelpers from './staticHelpers';
+import { StaticHelpersKeyPair } from './staticHelpers.keypair';
+import { BrightChainMemberType } from './memberType';
 import { KeyPairSyncResult } from 'crypto';
-import GuidV4, { toFullHexFromBigInt, FullHexGuid } from './guid';
+import { GuidV4, ShortHexGuid } from './guid';
+import { MemberKeyType } from './keys/memberKeyType';
+import { StoredMemberKey } from './keys/storedMemberKey';
+import { MemberKeyStore } from './stores/memberKeyStore';
+import { SecureBuffer } from './secureString';
+import { KeyType } from './keys/keyType';
+import { EmailString } from './emailString';
 /**
  * A member of Brightchain.
  * @param id The unique identifier for this member.
  * @param name The name of this member.
  */
-export default class BrightChainMember implements IReadOnlyBasicObjectDTO {
-  /**
-   * Signatures and verification are done using the signing key pair.
-   * The key pair may or may not be loaded.
-   */
-  private _signingKeyPair: null | EC.KeyPair;
-
-  /**
-   * Data to/from/for the member is encrypted using the data key pair.
-   * The key pair may or may not be loaded.
-   * Note that the data key is not itself associated with the signing key,
-   * but is stored encrypted using the mnemonic phrase from the signing key
-   */
-  private _dataKeyPair: null | ISimpleKeyPairBuffer;
-
-  public get hasDataKeyPair(): boolean {
-    return this._dataKeyPair !== null;
-  }
-
-  public get hasSigningKeyPair(): boolean {
-    return this._signingKeyPair !== null;
-  }
-
-  public get hasDataPrivateKey(): boolean {
-    return (
-      this._dataKeyPair !== null && this._dataKeyPair.privateKey.length > 0
-    );
-  }
-
-  public get hasSigningPrivateKey(): boolean {
-    try {
-      return (
-        this._signingKeyPair !== null &&
-        this._signingKeyPair.getPrivate('hex').length > 0
-      );
-    } catch (e) {
-      return false;
-    }
-  }
-
-  public get signingKeyPair(): EC.KeyPair {
-    if (this._signingKeyPair === null) {
-      throw new Error('Signing key pair not set');
-    }
-    return this._signingKeyPair;
-  }
-
-  public get signingPublicKey(): Buffer {
-    if (this._signingKeyPair === null) {
-      throw new Error('Signing key pair not set');
-    }
-    return Buffer.from(this._signingKeyPair.getPublic('hex'), 'hex');
-  }
-
-  public get signingPrivateKey(): Buffer {
-    if (!this._signingKeyPair) {
-      throw new Error('No data key pair');
-    }
-    const privateKey = this._signingKeyPair.getPrivate('hex');
-    if (!privateKey) {
-      throw new Error('No private key');
-    }
-    return Buffer.from(privateKey, 'hex');
-  }
-
-  public get dataKeyPair(): ISimpleKeyPairBuffer {
-    if (this._dataKeyPair === null) {
-      throw new Error('Data key pair not set');
-    }
-    return this._dataKeyPair;
-  }
-
-  public get dataPublicKey(): Buffer {
-    if (this._dataKeyPair === null) {
-      throw new Error('Data key pair not set');
-    }
-    return this._dataKeyPair.publicKey;
-  }
-
-  public get dataPrivateKey(): Buffer {
-    if (
-      !this._dataKeyPair ||
-      !this._dataKeyPair.privateKey ||
-      this._dataKeyPair.privateKey.length == 0
-    ) {
-      throw new Error('No data key pair');
-    }
-    return this._dataKeyPair.privateKey;
-  }
-
-  public get dataEncryptedPrivateKey(): Buffer {
-    if (!this._dataKeyPair) {
-      throw new Error('No data key pair');
-    }
-    return this._dataKeyPair.privateKey;
-  }
-
-  public readonly id: FullHexGuid;
+export class BrightChainMember implements IReadOnlyBasicObjectDTO {
+  private readonly _memberKeyPairs: MemberKeyStore;
+  public readonly id: ShortHexGuid;
   public readonly memberType: BrightChainMemberType;
   public readonly name: string;
-  public readonly contactEmail: string;
-  public readonly creatorId: FullHexGuid;
+  public readonly contactEmail: EmailString;
+  public readonly creatorId: ShortHexGuid;
   public readonly dateCreated: Date;
   public readonly dateUpdated: Date;
   constructor(
     memberType: BrightChainMemberType,
     name: string,
-    contactEmail: string,
-    signingKeyPair?: ISimpleKeyPairBuffer,
-    dataKeyPair?: ISimpleKeyPairBuffer,
-    id?: string,
+    contactEmail: EmailString,
+    credentialStore?: MemberKeyStore,
+    id?: ShortHexGuid,
     dateCreated?: Date,
     dateUpdated?: Date,
-    creatorId?: FullHexGuid
+    creatorId?: ShortHexGuid
   ) {
     this.memberType = memberType;
     if (id !== undefined) {
@@ -138,9 +50,9 @@ export default class BrightChainMember implements IReadOnlyBasicObjectDTO {
       } catch (e) {
         throw new Error('Invalid member ID');
       }
-      this.id = newGuid.asFullHexGuid;
+      this.id = newGuid.asShortHexGuid;
     } else {
-      this.id = GuidV4.new().asFullHexGuid;
+      this.id = GuidV4.new().asShortHexGuid;
     }
     this.name = name;
     if (!this.name || this.name.length == 0) {
@@ -150,24 +62,8 @@ export default class BrightChainMember implements IReadOnlyBasicObjectDTO {
       throw new Error('Member name has leading or trailing spaces');
     }
     this.contactEmail = contactEmail;
-    if (!this.contactEmail || this.contactEmail.length == 0) {
-      throw new Error('Member email missing');
-    }
-    if (this.contactEmail.trim() != this.contactEmail) {
-      throw new Error('Member email has leading or trailing spaces');
-    }
-    if (!StaticHelpers.validateEmail(this.contactEmail)) {
-      throw new Error('Member email is invalid');
-    }
-
-    this._signingKeyPair = null;
-    if (signingKeyPair) {
-      this.loadSigningKeyPair(signingKeyPair);
-    }
-    this._dataKeyPair = null;
-    if (dataKeyPair) {
-      this.loadDataKeyPair(dataKeyPair);
-    }
+    
+    this._memberKeyPairs = credentialStore ?? new MemberKeyStore();
 
     // don't create a new date object with nearly identical values to the existing one
     let _now: null | Date = null;
@@ -182,28 +78,11 @@ export default class BrightChainMember implements IReadOnlyBasicObjectDTO {
     this.creatorId = creatorId ?? this.id;
   }
 
-  /**
-   * Load a signing key pair for this member.
-   * @param keyPair The key pair to load.
-   */
   public loadSigningKeyPair(keyPair: ISimpleKeyPairBuffer) {
-    const curve = new EC(StaticHelpersKeyPair.DefaultECMode);
-    let valid = false;
-    let kp: null | EC.KeyPair = null;
-    try {
-      kp = curve.keyFromPrivate(keyPair.privateKey.toString('hex'), 'hex');
-      valid = kp.validate().result;
-    } catch (e) {
-      valid = false;
-    }
-    if (
-      !valid ||
-      kp === null ||
-      !StaticHelpersKeyPair.challengeSigningKeyPair(kp)
-    ) {
-      throw new Error('Invalid key pair');
-    }
-    this._signingKeyPair = kp;
+    this._memberKeyPairs.set(
+      MemberKeyType.Signing,
+      StoredMemberKey.newSigningKey(keyPair.publicKey, keyPair.privateKey)
+    );
   }
 
   /**
@@ -212,8 +91,8 @@ export default class BrightChainMember implements IReadOnlyBasicObjectDTO {
    */
   public loadDataKeyPair(keyPair: ISimpleKeyPairBuffer) {
     // challenge the data key pair
-    const password =
-      StaticHelpersKeyPair.signingKeyPairToDataKeyPassphraseFromMember(this);
+    const password: Buffer =
+      Buffer.from(StaticHelpersKeyPair.signingKeyPairToDataKeyPassphraseFromMember(this));
     let valid = false;
     try {
       valid =
@@ -226,15 +105,31 @@ export default class BrightChainMember implements IReadOnlyBasicObjectDTO {
         'Unable to challenge data key pair with mneomonic from signing key pair'
       );
     }
-    this._dataKeyPair = keyPair;
+    this._memberKeyPairs.set(
+      MemberKeyType.Encryption,
+      StoredMemberKey.newEncryptionKey(keyPair.publicKey, keyPair.privateKey)
+    );
   }
 
-  public unloadDataKeyPair(): void {
-    this._dataKeyPair = null;
+  public unloadKeyPair(keyType: MemberKeyType) {
+    this._memberKeyPairs.has(keyType) && this._memberKeyPairs.remove(keyType);
   }
 
-  public unloadSigningKeyPair(): void {
-    this._signingKeyPair = null;
+  public unloadPrivateKey(keyType: MemberKeyType): boolean {
+    if (!this._memberKeyPairs.has(keyType)) {
+      return false;
+    }
+    const keyPair = this._memberKeyPairs.get(keyType);
+    if (keyPair === undefined) {
+      return false;
+    }
+    const newStoredKey: StoredMemberKey = new StoredMemberKey(
+      keyPair.keyType,
+      keyPair.keyUse,
+      keyPair.publicKey,
+      undefined);
+    this._memberKeyPairs.set(keyType, newStoredKey);
+    return true;
   }
 
   /**
@@ -244,14 +139,13 @@ export default class BrightChainMember implements IReadOnlyBasicObjectDTO {
    * @returns
    */
   public sign(data: Buffer, options?: EC.SignOptions): EC.Signature {
-    if (!this._signingKeyPair) {
+    if (!this._memberKeyPairs.has(MemberKeyType.Signing)) {
       throw new Error('No key pair');
     }
-    return StaticHelpersKeyPair.signWithSigningKey(
-      this._signingKeyPair,
-      data,
-      options
-    );
+    const keyPair: EC.KeyPair = this._memberKeyPairs
+      .get(MemberKeyType.Signing)
+      .toECKeyPair();
+    return StaticHelpersKeyPair.signWithSigningKey(keyPair, data, options);
   }
 
   /**
@@ -261,42 +155,47 @@ export default class BrightChainMember implements IReadOnlyBasicObjectDTO {
    * @returns
    */
   public verify(signature: EC.Signature, data: Buffer): boolean {
-    if (!this._signingKeyPair) {
+    if (!this._memberKeyPairs.has(MemberKeyType.Signing)) {
       throw new Error('No key pair');
     }
-    return StaticHelpersKeyPair.verifyWithSigningKey(
-      this._signingKeyPair,
-      signature,
-      data
-    );
+    const keyPair: EC.KeyPair = this._memberKeyPairs
+      .get(MemberKeyType.Signing)
+      .toECKeyPair();
+    return StaticHelpersKeyPair.verifyWithSigningKey(keyPair, signature, data);
   }
 
-  public rekeySigningKeyPair(): ISigningKeyInfo {
-    if (!StaticHelpersKeyPair.challengeSigningKeyPair(this.signingKeyPair)) {
+  public rekeySigningKeyPair(): ISigningKeyPrivateKeyInfo {
+    const keyPair: EC.KeyPair = this._memberKeyPairs
+      .get(MemberKeyType.Signing)
+      .toECKeyPair();
+    if (!StaticHelpersKeyPair.challengeSigningKeyPair(keyPair)) {
       throw new Error('Invalid current signing key pair');
     }
-    const newSigningKeyPair = StaticHelpersKeyPair.generateSigningKeyPair();
+    const currentKeyPairInfo =
+      StaticHelpersKeyPair.getSigningKeyInfoFromKeyPair(keyPair);
+    const newSigningKeyPair = StaticHelpersKeyPair.regenerateSigningKeyPair(
+      currentKeyPairInfo.mnemonic
+    );
 
     // get data private key with current passphrase, convert to new passphrase
-    const currentSigningKeyPassphrase =
-      StaticHelpersKeyPair.signingKeyPairToDataKeyPassphraseFromMemberId(
-        this.id,
-        this.signingKeyPair
-      );
+    // const currentSigningKeyPassphrase =
+    //   StaticHelpersKeyPair.signingKeyPairToDataKeyPassphraseFromMemberId(
+    //     this.id,
+    //     this.signingKeyPair
+    //   );
     const newSigningKeyPassphrase =
-      StaticHelpersKeyPair.signingKeyPairToDataKeyPassphraseFromMemberId(
+      Buffer.from(StaticHelpersKeyPair.signingKeyPairToKeyPassphraseFromMemberId(
         this.id,
-        newSigningKeyPair.keyPair
-      );
+        newSigningKeyPair.keyPair,
+        MemberKeyType.Signing
+      ));
 
     // using the current signing key prhase, decrypt the data key pair
-    const decryptedDataPrivateKey = StaticHelpersKeyPair.decryptDataPrivateKey(
-      this.signingPrivateKey,
-      currentSigningKeyPassphrase
-    ).toString('utf8');
+    const decryptedDataPrivateKey =
+      StaticHelpersKeyPair.recoverDataKeyFromSigningKey(this).toString('utf8');
     // make a key pair sync result encryptPrivateKeyData can use
     const newKpSyncResult: KeyPairSyncResult<string, string> = {
-      publicKey: this.dataPublicKey.toString('utf8'),
+      publicKey: newSigningKeyPair.publicKey.toString('utf8'),
       privateKey: decryptedDataPrivateKey,
     };
     const updatedDataKeyPairWithReCryptedPrivate =
@@ -312,9 +211,51 @@ export default class BrightChainMember implements IReadOnlyBasicObjectDTO {
     ) {
       throw new Error('Unable to rekey signing key pair successfully');
     }
-    this._dataKeyPair = updatedDataKeyPairWithReCryptedPrivate;
-    this._signingKeyPair = newSigningKeyPair.keyPair;
+
+    this._memberKeyPairs.set(
+      MemberKeyType.Signing,
+      new StoredMemberKey(
+        KeyType.Rsa4096,
+        MemberKeyType.Signing,
+        Buffer.from(
+          newSigningKeyPair.keyPair.getPrivate().toString('hex'),
+          'hex'
+        ),
+        Buffer.from(newSigningKeyPair.keyPair.getPublic('hex'), 'hex')
+      )
+    );
     return newSigningKeyPair;
+  }
+
+  public hasKey(keyType: MemberKeyType): boolean {
+    return this._memberKeyPairs.has(keyType);
+  }
+
+  public hasPrivateKey(keyType: MemberKeyType): boolean {
+    if (!this.hasKey(keyType)) {
+      return false;
+    }
+    return this._memberKeyPairs.get(keyType).hasPrivateKey;
+  }
+
+  public getKey(keyType: MemberKeyType): StoredMemberKey | undefined {
+    if (!this._memberKeyPairs.has(keyType)) {
+      return undefined;
+    }
+    return this._memberKeyPairs.get(keyType);
+  }
+
+  public getOrCreate(keyType: MemberKeyType, creationFunctionIfUndefined: () => StoredMemberKey): StoredMemberKey {
+    const key: StoredMemberKey | undefined = this.getKey(keyType);
+    if (key !== undefined) {
+      return key;
+    }
+    const newKey: StoredMemberKey = creationFunctionIfUndefined();
+    if (newKey.keyUse !== keyType) {
+      throw new Error('Invalid key type');
+    }
+    this._memberKeyPairs.set(keyType, newKey);
+    return newKey;
   }
 
   // public publicEncrypt(data: Buffer): Buffer {
@@ -334,57 +275,97 @@ export default class BrightChainMember implements IReadOnlyBasicObjectDTO {
   public static newMember(
     memberType: BrightChainMemberType,
     name: string,
-    contactEmail: string
+    contactEmail: EmailString,
+    creator?: BrightChainMember
   ): BrightChainMember {
-    const newId = uuid.v4();
+    const newId = new GuidV4(uuid.v4()).asShortHexGuid;
     const keyPair = StaticHelpersKeyPair.generateMemberKeyPairs(newId);
+    const keyStore = new MemberKeyStore();
+    keyStore.set(
+      MemberKeyType.Signing,
+      StoredMemberKey.newSigningKey(
+        Buffer.from(keyPair.signing.getPublic('hex'), 'hex'),
+        Buffer.from(keyPair.signing.getPrivate('hex'), 'hex')
+      )
+    );
+    keyStore.set(
+      MemberKeyType.Encryption,
+      StoredMemberKey.newEncryptionKey(
+        keyPair.data.publicKey,
+        keyPair.data.privateKey
+      )
+    );
     return new BrightChainMember(
       memberType,
       name,
       contactEmail,
-      StaticHelpersKeyPair.getSigningKeyInfoFromKeyPair(keyPair.signing),
-      keyPair.data,
-      new GuidV4(newId).asFullHexGuid
+      keyStore,
+      newId,
+      undefined,
+      undefined,
+      creator?.id ?? newId
     );
+    // TODO: question: should creatorId only be allowed to be the same as the ID for the first member/node agent/creator?
   }
 
   toJSON(): string {
-    return JSON.stringify({
+    const dataKeyPair = this._memberKeyPairs.has(MemberKeyType.Encryption)
+      ? this._memberKeyPairs.get(MemberKeyType.Encryption)
+      : undefined;
+    const signingKeyPair = this._memberKeyPairs.get(MemberKeyType.Signing)
+      ? this._memberKeyPairs.get(MemberKeyType.Signing)
+      : undefined;
+    const memberKeys: { [key: string]: IStoredMemberKeyDTO } = {};
+    if (dataKeyPair) {
+      memberKeys[MemberKeyType.Encryption] = dataKeyPair.toJSON();
+    }
+    if (signingKeyPair) {
+      memberKeys[MemberKeyType.Signing] = signingKeyPair.toJSON();
+    }
+    const memberDTO: IMemberDTO = {
       id: this.id,
       type: this.memberType,
       name: this.name,
-      contactEmail: this.contactEmail,
-      signingKeyPair: this.signingKeyPair,
-      dataKeyPair: this.dataKeyPair,
+      contactEmail: this.contactEmail.toJSON(),
+      keys: memberKeys,
       createdBy: this.creatorId as string,
       dateCreated: this.dateCreated,
       dateUpdated: this.dateUpdated,
-    });
+    };
+
+    return JSON.stringify(memberDTO);
   }
   fromJSON(json: string): BrightChainMember {
-    const parsedMember = JSON.parse(json) as {
-      id: string;
-      type: BrightChainMemberType;
-      name: string;
-      contactEmail: string;
-      signingKeyPair: ISigningKeyInfo;
-      dataKeyPair: ISimpleKeyPairBuffer;
-      createdBy: string;
-      dateCreated: Date;
-      dateUpdated: Date;
-    };
+    const parsedMember: IMemberDTO = JSON.parse(json) as IMemberDTO;
     console.log('parsedMember', parsedMember);
+    const keyStore = new MemberKeyStore();
+    if (parsedMember.keys) {
+      Object.keys(parsedMember.keys).forEach((keyType) => {
+        const key = parsedMember.keys[keyType as MemberKeyType];
+        keyStore.set(
+          keyType as MemberKeyType,
+          new StoredMemberKey(
+            key.keyType,
+            key.keyUse,
+            Buffer.from(key.publicKey, 'hex'),
+            key.privateKey
+              ? Buffer.from(key.privateKey, 'hex')
+              : undefined
+          )
+        );
+      });
+    }
+    const contactEmail = new EmailString(parsedMember.contactEmail);
 
     return new BrightChainMember(
       parsedMember.type,
       parsedMember.name,
-      parsedMember.contactEmail,
-      parsedMember.signingKeyPair,
-      parsedMember.dataKeyPair,
-      parsedMember.id,
+      contactEmail,
+      keyStore,
+      parsedMember.id as ShortHexGuid,
       parsedMember.dateCreated,
       parsedMember.dateUpdated,
-      parsedMember.createdBy as FullHexGuid
+      parsedMember.createdBy as ShortHexGuid
     );
   }
 }

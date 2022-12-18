@@ -1,8 +1,8 @@
 import { KeyFragmentType } from './keyFragmentType';
 import { KeyRole } from './keyRole';
-import KeyStorageFormat from './keyStorageFormat';
+import { KeyStorageFormat } from './keyStorageFormat';
 
-export default class AsymmetricKeyFragment {
+export class AsymmetricKeyFragment {
   public readonly keyType: KeyType;
   public readonly keyRole: KeyRole;
   public readonly keyFragmentType: KeyFragmentType;

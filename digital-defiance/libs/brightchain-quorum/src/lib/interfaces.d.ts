@@ -1,3 +1,5 @@
+import { FullHexGuid, ShortHexGuid } from "@digital-defiance/brightchain";
+
 export type EncryptedShares = Array<string>;
 
 export interface IQoroumSealResults {
@@ -6,12 +8,12 @@ export interface IQoroumSealResults {
 }
 
 export interface IMemberShareCount {
-  memberId: bigint;
+  memberId: ShortHexGuid;
   shares: number;
 }
 
 export interface ISortedMemberShareCountArrays {
-  memberIds: bigint[];
+  memberIds: ShortHexGuid[];
   shares: number[];
   memberCount: number;
   totalShares: number;

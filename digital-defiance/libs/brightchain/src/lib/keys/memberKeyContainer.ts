@@ -1,9 +1,9 @@
-import AsymmetricKeyFragment from './asymmetricKeyFragment';
-import KeyFragmentType from './keyFragmentType';
-import KeyRole from './keyRole';
-import KeyType from './keyType';
+import { AsymmetricKeyFragment } from './asymmetricKeyFragment';
+import { KeyFragmentType } from './keyFragmentType';
+import { KeyRole } from './keyRole';
+import { KeyType } from './keyType';
 
-export default class MemberKeyContainer {
+export class MemberKeyContainer {
   public readonly keyRole: KeyRole;
   public readonly keyType: KeyType;
   public readonly keyFragments: Map<KeyFragmentType, AsymmetricKeyFragment>;

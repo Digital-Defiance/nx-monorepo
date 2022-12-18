@@ -1,6 +1,6 @@
 import Rand from 'rand-seed';
-import BrightChainMember from './brightChainMember';
-import BrightChainMemberType from './memberType';
+import { BrightChainMember } from './brightChainMember';
+import { BrightChainMemberType } from './memberType';
 
 /**
  * @description Static helper functions for Brightchain Quorum. Encryption and other utilities.
@@ -10,7 +10,7 @@ import BrightChainMemberType from './memberType';
  * - Uses crypto for AES encryption
  * - Uses crypto for RSA key generation, encryption/decryption
  */
-export default abstract class StaticHelpers {
+export abstract class StaticHelpers {
   /**
    * Generates the given number of random values of the specified number of bits, with an optional seed.
    * @param n number of values

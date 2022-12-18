@@ -3,4 +3,3 @@ export enum KeyRole {
   Signing,
   Encryption,
 }
-export default KeyRole;

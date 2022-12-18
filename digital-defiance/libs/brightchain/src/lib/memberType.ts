@@ -3,5 +3,3 @@ export enum BrightChainMemberType {
   User,
   Admin,
 }
-
-export default BrightChainMemberType;

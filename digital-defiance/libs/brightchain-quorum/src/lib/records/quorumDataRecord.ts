@@ -1,32 +1,31 @@
 import * as uuid from 'uuid';
-import BrightChainMember from 'libs/brightchain/src/lib/brightChainMember';
+import { BrightChainMember, ShortHexGuid, StaticHelpersChecksum, StaticHelpersElliptic } from '@digital-defiance/brightchain';
 import { ec as EC } from 'elliptic';
-import StaticHelpers from 'libs/brightchain/src/lib/staticHelpers';
-import StaticHelpersChecksum from 'libs/brightchain/src/lib/staticHelpers.checksum';
-import StaticHelpersElliptic from 'libs/brightchain/src/lib/staticHelpers.elliptic';
 import { IMemberShareCount } from '../interfaces';
+import { GuidV4 } from '@digital-defiance/brightchain';
+import { ChecksumBuffer } from 'libs/brightchain/src/lib/checksumBrand';
 
-export default class QuorumDataRecord {
-  public readonly id: bigint;
+export class QuorumDataRecord {
+  public readonly id: ShortHexGuid;
   public readonly encryptedData: Buffer;
   public static readonly checksumBits: number = 512;
   /**
    * sha-3 hash of the encrypted data
    */
-  public readonly checksum: Buffer;
+  public readonly checksum: ChecksumBuffer;
   public readonly signature: EC.Signature | null;
-  public readonly memberIDs: bigint[];
+  public readonly memberIDs: ShortHexGuid[];
   public readonly sharesRequired: number;
   public readonly dateCreated: Date;
   public readonly dateUpdated: Date;
 
   constructor(
     creator: BrightChainMember,
-    memberIDs: bigint[],
+    memberIDs: ShortHexGuid[],
     sharesRequired: number,
     encryptedData: Buffer,
     shareCountsByMemberId?: Array<IMemberShareCount>,
-    checksum?: Buffer,
+    checksum?: ChecksumBuffer,
     signature?: EC.Signature,
     id?: string,
     dateCreated?: Date,
@@ -36,9 +35,9 @@ export default class QuorumDataRecord {
       if (!uuid.validate(id)) {
         throw new Error('Invalid quorum data record ID');
       }
-      this.id = StaticHelpers.UuidV4ToBigint(id);
+      this.id = new GuidV4(id).asShortHexGuid;
     } else {
-      this.id = StaticHelpers.newUuidV4AsBigint();
+      this.id = GuidV4.new().asShortHexGuid;
     }
 
     if (memberIDs.length != 0 && memberIDs.length < 2) {

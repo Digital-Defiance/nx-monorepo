@@ -5,4 +5,3 @@ export enum KeyStorageFormat {
   Base64EncodedRaw,
   Base64EncodedEncrypted,
 }
-export default KeyStorageFormat;

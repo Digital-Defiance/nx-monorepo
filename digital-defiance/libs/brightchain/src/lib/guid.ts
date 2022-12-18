@@ -398,5 +398,3 @@ export class GuidV4 {
     return this._value.toString('base64') as Base64Guid;
   }
 }
-
-export default GuidV4;

@@ -3,7 +3,7 @@ import { ISimpleStore } from './interfaces';
 /**
  * Similar to a SimpleStore except that contents are loaded and expected to be buffers and be serialized to/from hex
  */
-export default class BufferStore<K> implements ISimpleStore<K, Buffer> {
+export class BufferStore<K> implements ISimpleStore<K, Buffer> {
   private _data: Map<K, string>;
 
   constructor() {

@@ -1,4 +1,4 @@
-import StaticHelpersChecksum from './staticHelpers.checksum';
+import { StaticHelpersChecksum } from './staticHelpers.checksum';
 
 describe('brightchain staticHelpers.checksum', () => {
   it('should generate the same checksum for the same data', () => {

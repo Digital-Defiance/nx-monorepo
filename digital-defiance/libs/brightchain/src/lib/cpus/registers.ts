@@ -8,5 +8,3 @@ export enum Registers {
   ESI = 6,
   EDI = 7,
 }
-
-export default Registers;

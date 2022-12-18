@@ -1,4 +1,5 @@
 import { createHash } from 'crypto';
+import { ChecksumBuffer } from './checksumBrand';
 
 /**
  * @description
@@ -9,7 +10,7 @@ import { createHash } from 'crypto';
  * - Uses crypto for AES encryption
  * - Uses crypto for RSA key generation, encryption/decryption
  */
-export default abstract class StaticHelpersChecksum {
+export abstract class StaticHelpersChecksum {
   public static readonly Sha3DefaultHashBits: number = 512;
 
   public static CryptoChecksumVerificationAlgorithm(bits: number): string {
@@ -21,7 +22,7 @@ export default abstract class StaticHelpersChecksum {
    */
   public static readonly EnableOaepHash: boolean = true;
 
-  public static calculateChecksum(data: Buffer): Buffer {
+  public static calculateChecksum(data: Buffer): ChecksumBuffer {
     return Buffer.from(
       createHash(
         StaticHelpersChecksum.CryptoChecksumVerificationAlgorithm(
@@ -31,10 +32,10 @@ export default abstract class StaticHelpersChecksum {
         .update(data)
         .digest('hex'),
       'hex'
-    );
+    ) as ChecksumBuffer;
   }
 
-  public static validateChecksum(data: Buffer, checksum: Buffer): boolean {
+  public static validateChecksum(data: Buffer, checksum: ChecksumBuffer): boolean {
     const calculatedChecksum = StaticHelpersChecksum.calculateChecksum(data);
     return (
       calculatedChecksum.length == checksum.length &&

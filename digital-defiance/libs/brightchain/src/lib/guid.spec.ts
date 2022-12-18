@@ -1,4 +1,5 @@
-import GuidV4, {
+import {
+  GuidV4,
   FullHexGuid,
   GuidBrandType,
   guidBrandToLength,

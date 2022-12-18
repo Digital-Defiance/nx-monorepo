@@ -5,9 +5,9 @@ import { Position } from './interfaces';
 import { ISignature, Signature } from './signature';
 import * as minUtils from './minimalisticUtils';
 import BN = require('bn.js');
-import StaticHelpersKeyPair from './staticHelpers.keypair';
+import { StaticHelpersKeyPair } from './staticHelpers.keypair';
 
-export default abstract class StaticHelpersElliptic {
+export abstract class StaticHelpersElliptic {
   /**
    * Appears to conver a number to an array of its bytes
    * @param arr

@@ -1,18 +1,15 @@
 import { Shares } from 'secrets.js-34r7h';
 import * as uuid from 'uuid';
 import { EncryptedShares, IMemberShareCount } from './interfaces';
-import BrightChainMember from 'libs/brightchain/src/lib/brightChainMember';
-import QuorumDataRecord from './records/quorumDataRecord';
-import SimpleStore from 'libs/brightchain/src/lib/stores/simpleStore';
-import BufferStore from 'libs/brightchain/src/lib/stores/bufferStore';
+import { BrightChainMember, GuidV4, SimpleStore, BufferStore, FullHexGuid, ShortHexGuid } from '@digital-defiance/brightchain';
+import { QuorumDataRecord } from './records/quorumDataRecord';
 import StaticHelpersSealing from './staticHelpers.sealing';
-import StaticHelpers from 'libs/brightchain/src/lib/staticHelpers';
 
 export default class BrightChainQuorum {
   /**
    * Member ID, uuid
    */
-  public readonly id: bigint;
+  public readonly id: ShortHexGuid;
 
   /**
    * The node owner is the system key pair that is used to sign and verify with Quorum members
@@ -27,48 +24,48 @@ export default class BrightChainQuorum {
   /**
    * Quorum members collection, keys may or may not be loaded for a given member
    */
-  private readonly _members: SimpleStore<bigint, BrightChainMember>;
+  private readonly _members: SimpleStore<ShortHexGuid, BrightChainMember>;
 
   /**
    * Collection of signing public keys for each member of the quorum.
    * This may include members not on this node.
    * Never erase, only add/update.
    */
-  private readonly _memberSigningPublicKeysByMemberId: BufferStore<bigint>;
+  private readonly _memberSigningPublicKeysByMemberId: BufferStore<ShortHexGuid>;
 
   /**
    * Collection of data keys for each member of the quorum.
    * This may include members not on this node.
    * Never erase, only add/update.
    */
-  private readonly _memberDataPublicKeysByMemberId: BufferStore<bigint>;
+  private readonly _memberDataPublicKeysByMemberId: BufferStore<ShortHexGuid>;
 
   /**
    * Collection of key shares that this quorum node has taken responsbility for
    * -- these should be encrypted with each member's private key
    */
-  private readonly _documentKeySharesById: SimpleStore<bigint, EncryptedShares>;
+  private readonly _documentKeySharesById: SimpleStore<ShortHexGuid, EncryptedShares>;
 
   /**
    * Collection of encrypted documents that this quorum node has taken responsibility for
    */
-  private readonly _documentsById: SimpleStore<bigint, QuorumDataRecord>;
+  private readonly _documentsById: SimpleStore<ShortHexGuid, QuorumDataRecord>;
 
   constructor(nodeAgent: BrightChainMember, name: string, id?: string) {
     if (id !== undefined) {
       if (!uuid.validate(id)) {
         throw new Error('Invalid quorum ID');
       }
-      this.id = StaticHelpers.UuidV4ToBigint(id);
+      this.id = new GuidV4(id).asShortHexGuid;
     } else {
-      this.id = StaticHelpers.newUuidV4AsBigint();
+      this.id = GuidV4.new().asShortHexGuid;
     }
 
-    this._members = new SimpleStore<bigint, BrightChainMember>();
-    this._memberSigningPublicKeysByMemberId = new BufferStore<bigint>();
-    this._memberDataPublicKeysByMemberId = new BufferStore<bigint>();
-    this._documentKeySharesById = new SimpleStore<bigint, EncryptedShares>();
-    this._documentsById = new SimpleStore<bigint, QuorumDataRecord>();
+    this._members = new SimpleStore<ShortHexGuid, BrightChainMember>();
+    this._memberSigningPublicKeysByMemberId = new BufferStore<ShortHexGuid>();
+    this._memberDataPublicKeysByMemberId = new BufferStore<ShortHexGuid>();
+    this._documentKeySharesById = new SimpleStore<ShortHexGuid, EncryptedShares>();
+    this._documentsById = new SimpleStore<ShortHexGuid, QuorumDataRecord>();
 
     this.nodeAgent = nodeAgent;
     this.name = name;
@@ -99,7 +96,7 @@ export default class BrightChainQuorum {
    * @param id
    * @returns
    */
-  public hasDocument(id: bigint): boolean {
+  public hasDocument(id: ShortHexGuid): boolean {
     return this._documentsById.has(id) && this._documentKeySharesById.has(id);
   }
 
@@ -125,7 +122,7 @@ export default class BrightChainQuorum {
     if (amongstMembers.length !== (newDoc.keyShares as Array<string>).length)
       throw new Error('Key share count does not match member list size');
 
-    const encryptedShares: Map<bigint, EncryptedShares> =
+    const encryptedShares: Map<ShortHexGuid, EncryptedShares> =
       StaticHelpersSealing.encryptSharesForMembers(
         newDoc.keyShares,
         amongstMembers,
@@ -149,7 +146,7 @@ export default class BrightChainQuorum {
    * @param shares
    * @returns
    */
-  public getDocument<T>(id: bigint, shares: Shares): T {
+  public getDocument<T>(id: ShortHexGuid, shares: Shares): T {
     const doc = this._documentsById.get(id);
     if (!doc) {
       throw new Error('Document not found');
@@ -170,7 +167,7 @@ export default class BrightChainQuorum {
    * @param id
    * @param members
    */
-  public canUnlock(id: bigint, members: BrightChainMember[]) {
+  public canUnlock(id: ShortHexGuid, members: BrightChainMember[]) {
     const doc = this._documentsById.get(id);
     if (!doc) {
       throw new Error('Document not found');

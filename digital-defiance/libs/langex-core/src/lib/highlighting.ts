@@ -22,19 +22,19 @@ function add_links() {
         }
 
         busy = true;
-        chrome.runtime.sendMessage(
-          null,
-          { word: word },
-          function (obj) {
-            busy = false;
-            if (obj !== null) {
-              $('#forvo').html(obj);
-              $('#forvo audio')[0].play();
-            } else {
-              href.text('Word not found');
-            }
-          }.bind(this)
-        );
+        // chrome.runtime.sendMessage(
+        //   null,
+        //   { word: word },
+        //   function (obj) {
+        //     busy = false;
+        //     if (obj !== null) {
+        //       $('#forvo').html(obj);
+        //       $('#forvo audio')[0].play();
+        //     } else {
+        //       href.text('Word not found');
+        //     }
+        //   }.bind(this)
+        // );
       });
     }
   );

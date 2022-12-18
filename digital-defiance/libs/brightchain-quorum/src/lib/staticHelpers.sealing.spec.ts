@@ -1,16 +1,14 @@
 import { IMemberShareCount } from './interfaces';
-import BrightChainMember from 'libs/brightchain/src/lib/brightChainMember';
+import { BrightChainMember, GuidV4, BrightChainMemberType, ShortHexGuid } from '@digital-defiance/brightchain';
 import StaticHelpersSealing from './staticHelpers.sealing';
-import BrightChainMemberType from 'libs/brightchain/src/lib/memberType';
-import StaticHelpers from 'libs/brightchain/src/lib/staticHelpers';
 
 describe('brightchainQuorum', () => {
   it('should determine the correct number of shares when no additional information is given', () => {
-    const memberIds: bigint[] = [
-      StaticHelpers.newUuidV4AsBigint(),
-      StaticHelpers.newUuidV4AsBigint(),
-      StaticHelpers.newUuidV4AsBigint(),
-      StaticHelpers.newUuidV4AsBigint(),
+    const memberIds: ShortHexGuid[] = [
+      GuidV4.new().asShortHexGuid,
+      GuidV4.new().asShortHexGuid,
+      GuidV4.new().asShortHexGuid,
+      GuidV4.new().asShortHexGuid,
     ];
     const shareCountByMemberId = undefined;
     const sharesByMemberId =
@@ -25,11 +23,11 @@ describe('brightchainQuorum', () => {
     expect(sharesByMemberId.get(memberIds[3])).toEqual(1);
   });
   it('should determine the correct number of shares when additional information is given', () => {
-    const memberIds: bigint[] = [
-      StaticHelpers.newUuidV4AsBigint(),
-      StaticHelpers.newUuidV4AsBigint(),
-      StaticHelpers.newUuidV4AsBigint(),
-      StaticHelpers.newUuidV4AsBigint(),
+    const memberIds: ShortHexGuid[] = [
+      GuidV4.new().asShortHexGuid,
+      GuidV4.new().asShortHexGuid,
+      GuidV4.new().asShortHexGuid,
+      GuidV4.new().asShortHexGuid,
     ];
     const member1Shares = Math.ceil(Math.random() * 10);
     const member2Shares = Math.ceil(Math.random() * 10);
@@ -53,11 +51,11 @@ describe('brightchainQuorum', () => {
     expect(sharesByMemberId.get(memberIds[3])).toEqual(member4Shares);
   });
   it('should determine the correct number of shares when partial additional information is given', () => {
-    const memberIds: bigint[] = [
-      StaticHelpers.newUuidV4AsBigint(),
-      StaticHelpers.newUuidV4AsBigint(),
-      StaticHelpers.newUuidV4AsBigint(),
-      StaticHelpers.newUuidV4AsBigint(),
+    const memberIds: ShortHexGuid[] = [
+      GuidV4.new().asShortHexGuid,
+      GuidV4.new().asShortHexGuid,
+      GuidV4.new().asShortHexGuid,
+      GuidV4.new().asShortHexGuid,
     ];
     const member2Shares = Math.ceil(Math.random() * 10);
     const member3Shares = Math.ceil(Math.random() * 10);
@@ -77,15 +75,15 @@ describe('brightchainQuorum', () => {
     expect(sharesByMemberId.get(memberIds[3])).toEqual(1);
   });
   it('should throw when a bad member id is given in the additional information', () => {
-    const memberIds: bigint[] = [
-      StaticHelpers.newUuidV4AsBigint(),
-      StaticHelpers.newUuidV4AsBigint(),
-      StaticHelpers.newUuidV4AsBigint(),
-      StaticHelpers.newUuidV4AsBigint(),
+    const memberIds: ShortHexGuid[] = [
+      GuidV4.new().asShortHexGuid,
+      GuidV4.new().asShortHexGuid,
+      GuidV4.new().asShortHexGuid,
+      GuidV4.new().asShortHexGuid,
     ];
     const additionalInformation: Array<IMemberShareCount> = [
       {
-        memberId: StaticHelpers.newUuidV4AsBigint(),
+        memberId: GuidV4.new().asShortHexGuid,
         shares: 9,
       },
     ];
@@ -97,11 +95,11 @@ describe('brightchainQuorum', () => {
     }).toThrow();
   });
   it('should not lose information converting betweeen map and arrays', () => {
-    const memberIds: bigint[] = [
-      StaticHelpers.newUuidV4AsBigint(),
-      StaticHelpers.newUuidV4AsBigint(),
-      StaticHelpers.newUuidV4AsBigint(),
-      StaticHelpers.newUuidV4AsBigint(),
+    const memberIds: ShortHexGuid[] = [
+      GuidV4.new().asShortHexGuid,
+      GuidV4.new().asShortHexGuid,
+      GuidV4.new().asShortHexGuid,
+      GuidV4.new().asShortHexGuid,
     ];
     const additionalInformation: Array<IMemberShareCount> = [
       { memberId: memberIds[1], shares: 2 },

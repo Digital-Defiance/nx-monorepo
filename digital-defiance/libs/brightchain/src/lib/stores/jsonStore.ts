@@ -3,7 +3,7 @@ import { IJsonStore } from './interfaces';
 /**
  * Similar to a SimpleStore except that contents are loaded and saved to/from JSON format for serialization testing
  */
-export default class JsonStore<K> implements IJsonStore<K> {
+export class JsonStore<K> implements IJsonStore<K> {
   private _data: Map<K, string>;
 
   constructor() {

@@ -1,6 +1,6 @@
 import { ISimpleStore } from './interfaces';
 
-export default class SimpleStore<K, V> implements ISimpleStore<K, V> {
+export class SimpleStore<K, V> implements ISimpleStore<K, V> {
   private _data: Map<K, V>;
 
   constructor() {

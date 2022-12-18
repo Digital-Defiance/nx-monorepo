@@ -6,7 +6,7 @@ import {
   mnemonicToEntropy,
   entropyToMnemonic,
 } from 'bip39';
-import BrightChainMember from './brightChainMember';
+import { BrightChainMember } from './brightChainMember';
 import {
   createCipheriv,
   createDecipheriv,
@@ -22,14 +22,17 @@ import {
 import {
   IDataKeyComponents,
   IDataAndSigningKeys,
-  ISigningKeyInfo,
+  ISigningKeyPrivateKeyInfo,
   ISimpleKeyPairBuffer,
   ISymmetricEncryptionResults,
-  ISealResults,
 } from './interfaces';
-import StaticHelpersPbkdf2 from './staticHelpers.pbkdf2';
-import StaticHelpers from './staticHelpers';
-import StaticHelpersSymmetric from './staticHelpers.symmetric';
+import { StaticHelpersPbkdf2 } from './staticHelpers.pbkdf2';
+import { StaticHelpers } from './staticHelpers';
+import { StaticHelpersSymmetric } from './staticHelpers.symmetric';
+import { ShortHexGuid } from './guid';
+import { SealResults } from './sealResults';
+import { MemberKeyType } from './keys/memberKeyType';
+import { StoredMemberKey } from './keys/storedMemberKey';
 
 /**
  * @description
@@ -40,7 +43,7 @@ import StaticHelpersSymmetric from './staticHelpers.symmetric';
  * - Uses crypto for AES encryption
  * - Uses crypto for RSA key generation, encryption/decryption
  */
-export default abstract class StaticHelpersKeyPair {
+export abstract class StaticHelpersKeyPair {
   /**
    * EC is called with this value
    */
@@ -147,11 +150,12 @@ export default abstract class StaticHelpersKeyPair {
    * @returns
    */
   public static DataPrivateDecryptOptions(privateKey: Buffer): RsaPublicKey {
-    return {
+    const rsaPublicKey: RsaPublicKey = {
       key: privateKey,
       padding: cryptoConstants.RSA_PKCS1_OAEP_PADDING,
       //oaepHash: StaticHelpers.EnableOaepHash ? 'SHA256' : undefined,
     };
+    return rsaPublicKey;
   }
 
   /**
@@ -191,7 +195,7 @@ export default abstract class StaticHelpersKeyPair {
 
   public static encryptPrivateKeyData(
     result: KeyPairSyncResult<string, string>,
-    newPassword: string
+    newPassword: Buffer
   ): ISimpleKeyPairBuffer {
     const derivedKey = StaticHelpersPbkdf2.deriveKeyFromPassword(newPassword);
     const encryptedPrivateKey = StaticHelpersSymmetric.symmetricEncrypt(
@@ -199,7 +203,7 @@ export default abstract class StaticHelpersKeyPair {
       derivedKey.hash,
       true
     );
-    const privateKeyData = Buffer.concat([
+    const privateKeyData: Buffer = Buffer.concat([
       StaticHelpers.valueToBuffer(derivedKey.salt.length),
       StaticHelpers.valueToBuffer(derivedKey.iterations),
       derivedKey.salt,
@@ -219,7 +223,7 @@ export default abstract class StaticHelpersKeyPair {
    * @returns
    */
   public static generateDataKeyPair(
-    password: string,
+    password: Buffer,
     loopPrevention?: number
   ): ISimpleKeyPairBuffer {
     const keyPairOptions = StaticHelpersKeyPair.DataKeyPairOptions;
@@ -253,7 +257,7 @@ export default abstract class StaticHelpersKeyPair {
    */
   public static decryptDataPrivateKey(
     privateKey: Buffer,
-    password: string
+    password: Buffer
   ): Buffer {
     const keyComponents =
       StaticHelpersKeyPair.extractDataKeyComponents(privateKey);
@@ -275,6 +279,9 @@ export default abstract class StaticHelpersKeyPair {
    * @returns
    */
   public static extractDataKeyComponents(buf: Buffer): IDataKeyComponents {
+    if (buf.length < 8) {
+      throw new Error('Invalid buffer length');
+    }
     const saltLength = buf.readUInt32BE(0);
     const iterations = buf.readUInt32BE(4);
     if (saltLength === 0) {
@@ -289,11 +296,12 @@ export default abstract class StaticHelpersKeyPair {
     const uintArrOfBuf = Uint8Array.from(buf);
     const salt: Buffer = Buffer.from(uintArrOfBuf.slice(8, 8 + saltLength));
     const data: Buffer = Buffer.from(uintArrOfBuf.slice(8 + saltLength));
-    return {
+    const keyComponents: IDataKeyComponents = {
       salt,
       iterations,
       data,
     };
+    return keyComponents;
   }
 
   /**
@@ -304,7 +312,7 @@ export default abstract class StaticHelpersKeyPair {
    */
   public static challengeDataKeyPair(
     keyPair: ISimpleKeyPairBuffer,
-    password: string
+    password: Buffer
   ): boolean {
     try {
       // generate a nonce
@@ -352,6 +360,26 @@ export default abstract class StaticHelpersKeyPair {
     }
   }
 
+  public static simpleKeyPairBufferToValidatedECKeyPair(keyPair: ISimpleKeyPairBuffer): EC.KeyPair {
+    const curve = new EC(StaticHelpersKeyPair.DefaultECMode);
+    let valid = false;
+    let kp: null | EC.KeyPair = null;
+    try {
+      kp = curve.keyFromPrivate(keyPair.privateKey, 'hex');
+      valid = kp.validate().result;
+    } catch (e) {
+      valid = false;
+    }
+    if (
+      !valid ||
+      kp === null ||
+      !StaticHelpersKeyPair.challengeSigningKeyPair(kp)
+    ) {
+      throw new Error('Invalid key pair');
+    }
+    return kp;
+  }
+
   /**
    * Generate an ED25519 key pair for signing/verifying messages
    * @param salt
@@ -360,13 +388,13 @@ export default abstract class StaticHelpersKeyPair {
   public static generateSigningKeyPair(
     salt?: string,
     loopPrevent?: number
-  ): ISigningKeyInfo {
+  ): ISigningKeyPrivateKeyInfo {
     const mnemonic = generateMnemonic(StaticHelpersKeyPair.MnemonicStrength);
     const entropy = mnemonicToEntropy(mnemonic);
-    const seedBytes = mnemonicToSeedSync(mnemonic, salt);
+    const seedBytesHex = mnemonicToSeedSync(mnemonic, salt).toString('hex');
     const curve = new EC(StaticHelpersKeyPair.DefaultECMode);
     const keyPair = curve.genKeyPair({
-      entropy: seedBytes.toString('hex'),
+      entropy: seedBytesHex,
       entropyEnc: 'hex',
     });
     // test the key for degenerate keys
@@ -383,15 +411,19 @@ export default abstract class StaticHelpersKeyPair {
       );
     }
     const simpleKeyPair =
-      StaticHelpersKeyPair.convertSigningKeyPairToISimpleKeyPairBuffer(keyPair);
-    return {
+      StaticHelpersKeyPair.convertECKeyPairToISimpleKeyPairBuffer(keyPair);
+    if (!simpleKeyPair.privateKey) {
+      throw new Error('Private key is not defined');
+    }
+    const result: ISigningKeyPrivateKeyInfo = {
       keyPair: keyPair,
       publicKey: simpleKeyPair.publicKey,
       privateKey: simpleKeyPair.privateKey,
-      seedHex: seedBytes.toString('hex'),
+      seedHex: seedBytesHex,
       entropy: entropy,
       mnemonic: mnemonic,
     };
+    return result;
   }
 
   /**
@@ -403,7 +435,7 @@ export default abstract class StaticHelpersKeyPair {
   public static regenerateSigningKeyPair(
     mnemonic: string,
     salt?: string
-  ): ISigningKeyInfo {
+  ): ISigningKeyPrivateKeyInfo {
     const seedBytes = mnemonicToSeedSync(mnemonic, salt);
     const entropy = mnemonicToEntropy(mnemonic);
     const curve = new EC(StaticHelpersKeyPair.DefaultECMode);
@@ -412,12 +444,12 @@ export default abstract class StaticHelpersKeyPair {
       entropyEnc: 'hex',
     });
     const simpleKeyPair =
-      StaticHelpersKeyPair.convertSigningKeyPairToISimpleKeyPairBuffer(keyPair);
+      StaticHelpersKeyPair.convertECKeyPairToISimpleKeyPairBuffer(keyPair);
     return {
       keyPair: keyPair,
       publicKey: simpleKeyPair.publicKey,
       privateKey: simpleKeyPair.privateKey,
-      seedHex: seedBytes.toString('hex'),
+      seedHex: seedBytes.toString('hex'), // don't add 'hex' encoding, we want the hex string
       entropy: entropy,
       mnemonic: mnemonic,
     };
@@ -428,18 +460,19 @@ export default abstract class StaticHelpersKeyPair {
    * @returns
    */
   public static generateMemberKeyPairs(
-    memberId: string,
+    memberId: ShortHexGuid,
     loopPrevention?: number
   ): IDataAndSigningKeys {
     // TODO: check for degenerate keys.
     // TODO: verify each key can encrypt and decrypt a message and/or sign/verify a message
     try {
       const signingKey = StaticHelpersKeyPair.generateSigningKeyPair();
-      const dataKey = StaticHelpersKeyPair.generateDataKeyPair(
-        StaticHelpersKeyPair.signingKeyPairToDataKeyPassphraseFromMemberId(
+      const dataKey: ISimpleKeyPairBuffer = StaticHelpersKeyPair.generateDataKeyPair(
+        Buffer.from(StaticHelpersKeyPair.signingKeyPairToKeyPassphraseFromMemberId(
           memberId,
-          signingKey.keyPair
-        )
+          signingKey.keyPair,
+          MemberKeyType.Signing
+        ))
       );
       return {
         signing: signingKey.keyPair,
@@ -469,22 +502,23 @@ export default abstract class StaticHelpersKeyPair {
   public static getSigningKeyInfoFromKeyPair(
     keyPair: EC.KeyPair,
     salt?: string
-  ): ISigningKeyInfo {
+  ): ISigningKeyPrivateKeyInfo {
     const simpleKeyPair =
-      StaticHelpersKeyPair.convertSigningKeyPairToISimpleKeyPairBuffer(keyPair);
+      StaticHelpersKeyPair.convertECKeyPairToISimpleKeyPairBuffer(keyPair);
     const mnemonic = entropyToMnemonic(
-      simpleKeyPair.privateKey.toString('hex')
+      simpleKeyPair.privateKey
     );
     const seedBytes = mnemonicToSeedSync(mnemonic, salt);
-    const entropy = mnemonicToEntropy(mnemonic);
-    return {
+    const entropy: string = mnemonicToEntropy(mnemonic);
+    const signingKeyInfo: ISigningKeyPrivateKeyInfo = {
       keyPair: keyPair,
       publicKey: simpleKeyPair.publicKey,
       privateKey: simpleKeyPair.privateKey,
-      seedHex: seedBytes.toString('hex'),
+      seedHex: seedBytes.toString('hex'), // don't add 'hex' encoding, we want the hex string
       entropy: entropy,
       mnemonic: mnemonic,
     };
+    return signingKeyInfo;
   }
 
   /**
@@ -497,15 +531,16 @@ export default abstract class StaticHelpersKeyPair {
   public static recoverDataKeyFromSigningKey(
     member: BrightChainMember
   ): Buffer {
-    if (!member.hasDataPrivateKey) {
-      throw new Error('Member data private key not found');
+    const signingKey: StoredMemberKey | undefined = member.getKey(MemberKeyType.Signing);
+    if (!signingKey || !signingKey.privateKey || signingKey.privateKey.length === 0) {
+      throw new Error('Member does not have a signing key');
     }
     // get the bip39 mnemonic from the signing key
     const passPhrase =
-      StaticHelpersKeyPair.signingKeyPairToDataKeyPassphraseFromMember(member);
+      Buffer.from(StaticHelpersKeyPair.signingKeyPairToDataKeyPassphraseFromMember(member));
     // decrypt the private key
     const decryptedPrivateKey = StaticHelpersKeyPair.decryptDataPrivateKey(
-      member.signingPrivateKey,
+      signingKey.privateKey,
       passPhrase
     );
     return decryptedPrivateKey;
@@ -515,14 +550,16 @@ export default abstract class StaticHelpersKeyPair {
    * Use the private key of the signing key pair to produce a deterministic password from the signing key
    * Do not change this as it will break existing data keys
    */
-  public static signingKeyPairToDataKeyPassphraseFromMemberId(
-    memberId: string,
-    signingKeyPair: EC.KeyPair
+  public static signingKeyPairToKeyPassphraseFromMemberId(
+    memberId: ShortHexGuid,
+    signingKeyPair: EC.KeyPair,
+    keyType: MemberKeyType
   ): string {
     try {
       const mnemonic = entropyToMnemonic(signingKeyPair.getPrivate('hex'));
       // lets seed the passphrase with the member's id for some more entropy
-      return [memberId, '!', mnemonic].join('');
+      const memberIdSignature = signingKeyPair.sign(memberId as string);
+      return [keyType, memberId, memberIdSignature, mnemonic].join('!');
     } catch (e) {
       throw new Error(
         'Unable to challenge data key pair with mneomonic from signing key pair'
@@ -537,10 +574,14 @@ export default abstract class StaticHelpersKeyPair {
   public static signingKeyPairToDataKeyPassphraseFromMember(
     member: BrightChainMember
   ): string {
-    return StaticHelpersKeyPair.signingKeyPairToDataKeyPassphraseFromMemberId(
-      member.id,
-      member.signingKeyPair
-    );
+    const signingKey: StoredMemberKey | undefined = member.getKey(MemberKeyType.Signing);
+    if (!signingKey || !signingKey.privateKey || signingKey.privateKey.length === 0) {
+      throw new Error('Member does not have a valid signing key with private key');
+    }
+    return StaticHelpersKeyPair.signingKeyPairToKeyPassphraseFromMemberId(
+        member.id,
+        signingKey.toECKeyPair(),
+        MemberKeyType.Signing);
   }
 
   public static signWithSigningKey(
@@ -581,7 +622,7 @@ export default abstract class StaticHelpersKeyPair {
     // encrypt the document using AES-256 and the key
     // Initialization Vector
     const ivBuffer = randomBytes(StaticHelpersKeyPair.SymmetricKeyIvBytes);
-    const key = encryptionKey ?? randomBytes(this.SymmetricKeyBytes);
+    const key: Buffer = encryptionKey ?? randomBytes(this.SymmetricKeyBytes);
     const cipher = createCipheriv(
       StaticHelpersKeyPair.SymmetricAlgorithmType,
       key,
@@ -589,7 +630,7 @@ export default abstract class StaticHelpersKeyPair {
     );
 
     const ciphertextBuffer = cipher.update(data);
-    const encryptionIvPlusData = Buffer.concat([
+    const encryptionIvPlusData: Buffer = Buffer.concat([
       ivBuffer,
       ciphertextBuffer,
       cipher.final(),
@@ -626,7 +667,7 @@ export default abstract class StaticHelpersKeyPair {
     return decryptedDataBuffer;
   }
 
-  public static seal<T>(data: T, publicKey: Buffer): ISealResults {
+  public static seal<T>(data: T, publicKey: Buffer): SealResults {
     // encrypt the data with a new symmetric key
     const encrypted = StaticHelpersSymmetric.symmetricEncrypt<T>(data);
     // encrypt the symmetric key with the asymmetric key for the user
@@ -635,13 +676,13 @@ export default abstract class StaticHelpersKeyPair {
       encrypted.key
     );
     // return the encrypted symmetric key and the encrypted data
-    return {
-      encryptedData: encrypted.encryptedData,
-      encryptedKey: encryptedData,
-    };
+    return new SealResults(
+      encrypted.encryptedData,
+      encryptedData,
+    );
   }
 
-  public static ISealResultsToBuffer(results: ISealResults): Buffer {
+  public static SealResultsToBuffer(results: SealResults): Buffer {
     return Buffer.concat([
       StaticHelpers.valueToBuffer(results.encryptedKey.length),
       results.encryptedKey,
@@ -650,23 +691,23 @@ export default abstract class StaticHelpersKeyPair {
     ]);
   }
 
-  public static BufferToISealResults(buffer: Buffer): ISealResults {
-    const encryptedKeyLength = buffer.readUInt32BE(0);
-    const encryptedKey = buffer.slice(4, 4 + encryptedKeyLength);
-    const encryptedDataLength = buffer.readUInt32BE(4 + encryptedKeyLength);
-    const encryptedData = buffer.slice(
+  public static BufferToSealResults(buf: Buffer): SealResults {
+    const encryptedKeyLength = buf.readUInt32BE(0);
+    const encryptedKey: Buffer = buf.slice(4, 4 + encryptedKeyLength);
+    const encryptedDataLength = buf.readUInt32BE(4 + encryptedKeyLength);
+    const encryptedData = buf.slice(
       4 + encryptedKeyLength + 4,
       4 + encryptedKeyLength + 4 + encryptedDataLength
     );
-    return {
-      encryptedKey: encryptedKey,
-      encryptedData: encryptedData,
-    };
+    return new SealResults(
+      encryptedKey,
+      encryptedData,
+    );
   }
 
-  public static unseal<T>(sealedData: ISealResults, privateKey: Buffer) {
+  public static unseal<T>(sealedData: SealResults, privateKey: Buffer) {
     // decrypt the symmetric key with the private key
-    const decryptedKey = privateDecrypt(
+    const decryptedKey: Buffer = privateDecrypt(
       StaticHelpersKeyPair.DataPrivateDecryptOptions(privateKey),
       sealedData.encryptedKey
     );
@@ -678,7 +719,7 @@ export default abstract class StaticHelpersKeyPair {
     return decryptedData;
   }
 
-  public static convertSigningKeyPairToISimpleKeyPairBuffer(
+  public static convertECKeyPairToISimpleKeyPairBuffer(
     keyPair: EC.KeyPair
   ): ISimpleKeyPairBuffer {
     return {

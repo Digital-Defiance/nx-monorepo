@@ -1,4 +1,4 @@
-import JsonStore from './jsonStore';
+import { JsonStore } from './jsonStore';
 
 describe('jsonStore', () => {
   it('should be able to store and retrieve a value', () => {

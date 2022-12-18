@@ -1,15 +1,16 @@
-import BrightChainMember from '../brightChainMember';
-import { FullHexGuid, toFullHexFromBigInt, toFullHexGuid } from '../guid';
+import { BrightChainMember } from '../brightChainMember';
+import { ChecksumBuffer, ChecksumString } from '../checksumBrand';
+import { FullHexGuid, ShortHexGuid, toFullHexGuid, toShortHexGuid } from '../guid';
 import { IReadOnlyDataObjectDTO } from '../interfaces';
-import StaticHelpersChecksum from '../staticHelpers.checksum';
-import BlockSize, { lengthToBlockSize, validateBlockSize } from './blockSizes';
+import { StaticHelpersChecksum } from '../staticHelpers.checksum';
+import { BlockSize,  lengthToBlockSize, validateBlockSize } from './blockSizes';
 
-export default class Block implements IReadOnlyDataObjectDTO {
+export class Block implements IReadOnlyDataObjectDTO {
   constructor(
     creator: BrightChainMember,
     data: Uint8Array,
     dateCreated?: Date,
-    checksum?: string
+    checksum?: ChecksumString
   ) {
     this.createdBy = creator.id;
     if (!validateBlockSize(data.length)) {
@@ -19,7 +20,7 @@ export default class Block implements IReadOnlyDataObjectDTO {
     const rawChecksum = StaticHelpersChecksum.calculateChecksum(
       Buffer.from(data)
     );
-    this.id = rawChecksum.toString('hex');
+    this.id = rawChecksum.toString('hex') as ChecksumString;
 
     if (checksum !== undefined && this.id !== checksum) {
       throw new Error('Checksum mismatch');
@@ -27,7 +28,7 @@ export default class Block implements IReadOnlyDataObjectDTO {
     this.dateCreated = dateCreated ?? new Date();
   }
 
-  public readonly id: string;
+  public readonly id: ChecksumString;
   public get blockSize(): BlockSize {
     return lengthToBlockSize(this.data.length);
   }
@@ -35,7 +36,7 @@ export default class Block implements IReadOnlyDataObjectDTO {
   public get checksumString() {
     return this.id;
   }
-  public readonly createdBy: FullHexGuid;
+  public readonly createdBy: ShortHexGuid;
   public readonly dateCreated: Date;
   public xor(other: Block, agent: BrightChainMember): Block {
     if (this.blockSize !== other.blockSize) {
@@ -57,10 +58,10 @@ export default class Block implements IReadOnlyDataObjectDTO {
   }
   public static fromJSON(
     json: string,
-    fetchMember: (memberId: FullHexGuid) => BrightChainMember
+    fetchMember: (memberId: ShortHexGuid) => BrightChainMember
   ): Block {
     const parsed = JSON.parse(json) as {
-      id: string;
+      id: ChecksumString;
       data: string;
       createdBy: string;
       dateCreated: Date;
@@ -68,7 +69,7 @@ export default class Block implements IReadOnlyDataObjectDTO {
     const data = Buffer.from(parsed.data, 'hex');
     const dateCreated = new Date(parsed.dateCreated);
     try {
-      const memberId = toFullHexGuid(parsed.createdBy);
+      const memberId = toShortHexGuid(parsed.createdBy);
       const member = fetchMember(memberId);
       if (member.id != memberId) {
         throw new Error('Member mismatch');

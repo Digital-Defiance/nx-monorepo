@@ -1,5 +1,5 @@
-import StaticHelpersElliptic from './staticHelpers.elliptic';
-import StaticHelpersKeyPair from './staticHelpers.keypair';
+import { StaticHelpersElliptic } from './staticHelpers.elliptic';
+import { StaticHelpersKeyPair } from './staticHelpers.keypair';
 
 describe('brightchain staticHelpers.signing', () => {
   // TODO determine which of these methods to support, or both

@@ -5,9 +5,9 @@ import {
   publicEncrypt,
   privateDecrypt,
 } from 'crypto';
-import { ISymmetricEncryptionResults, ISealResults } from './interfaces';
-import StaticHelpersKeyPair from './staticHelpers.keypair';
-import StaticHelpers from './staticHelpers';
+import { ISymmetricEncryptionResults } from './interfaces';
+import { StaticHelpersKeyPair } from './staticHelpers.keypair';
+import { SealResults } from './sealResults';
 
 /**
  * @description
@@ -18,7 +18,7 @@ import StaticHelpers from './staticHelpers';
  * - Uses crypto for AES encryption
  * - Uses crypto for RSA key generation, encryption/decryption
  */
-export default abstract class StaticHelpersSymmetric {
+export abstract class StaticHelpersSymmetric {
   /**
    * Encrypt data with AES
    * @param data
@@ -92,8 +92,7 @@ export default abstract class StaticHelpersSymmetric {
       key,
       ivBuffer
     );
-    const decryptedDataBuffer = decipher.update(ciphertextBuffer);
-    return decryptedDataBuffer;
+    return decipher.update(ciphertextBuffer);
   }
 
   /**
@@ -111,7 +110,7 @@ export default abstract class StaticHelpersSymmetric {
     ) as T;
   }
 
-  public static seal<T>(data: T, publicKey: Buffer): ISealResults {
+  public static seal<T>(data: T, publicKey: Buffer): SealResults {
     // encrypt the data with a new symmetric key
     const encrypted = StaticHelpersSymmetric.symmetricEncrypt<T>(data);
     // encrypt the symmetric key with the asymmetric key for the user
@@ -120,38 +119,15 @@ export default abstract class StaticHelpersSymmetric {
       encrypted.key
     );
     // return the encrypted symmetric key and the encrypted data
-    return {
-      encryptedData: encrypted.encryptedData,
-      encryptedKey: encryptedData,
-    };
-  }
-
-  public static ISealResultsToBuffer(results: ISealResults): Buffer {
-    return Buffer.concat([
-      StaticHelpers.valueToBuffer(results.encryptedKey.length),
-      results.encryptedKey,
-      StaticHelpers.valueToBuffer(results.encryptedData.length),
-      results.encryptedData,
-    ]);
-  }
-
-  public static BufferToISealResults(buffer: Buffer): ISealResults {
-    const encryptedKeyLength = buffer.readUInt32BE(0);
-    const encryptedKey = buffer.slice(4, 4 + encryptedKeyLength);
-    const encryptedDataLength = buffer.readUInt32BE(4 + encryptedKeyLength);
-    const encryptedData = buffer.slice(
-      4 + encryptedKeyLength + 4,
-      4 + encryptedKeyLength + 4 + encryptedDataLength
+    return new SealResults(
+      encrypted.encryptedData,
+      encryptedData,
     );
-    return {
-      encryptedKey: encryptedKey,
-      encryptedData: encryptedData,
-    };
   }
 
-  public static unseal<T>(sealedData: ISealResults, privateKey: Buffer) {
+  public static unseal<T>(sealedData: SealResults, privateKey: Buffer) {
     // decrypt the symmetric key with the private key
-    const decryptedKey = privateDecrypt(
+    const decryptedKey: Buffer = privateDecrypt(
       StaticHelpersKeyPair.DataPrivateDecryptOptions(privateKey),
       sealedData.encryptedKey
     );

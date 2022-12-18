@@ -1,4 +1,4 @@
-import BufferStore from './bufferStore';
+import { BufferStore } from './bufferStore';
 
 describe('bufferStore', () => {
   it('should be able to store and retrieve a value', () => {

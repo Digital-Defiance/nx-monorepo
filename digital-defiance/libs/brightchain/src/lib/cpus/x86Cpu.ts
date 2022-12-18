@@ -1,7 +1,7 @@
 // https://gist.githubusercontent.com/tadeuzagallo/3853299f033bf9b746e4/raw/43467ba1bee7251e1b653123f29e6ff5643a0735/x86.js
 // https://gist.github.com/tadeuzagallo/3853299f033bf9b746e4
 'use strict';
-import Registers from './registers';
+import { Registers } from './registers';
 import {
   syscallInstructions,
   buildInstructionArray,

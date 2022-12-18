@@ -1,16 +1,13 @@
 import * as secrets from 'secrets.js-34r7h';
 import { Shares } from 'secrets.js-34r7h';
-import BrightChainMember from 'libs/brightchain/src/lib/brightChainMember';
 import {
   IQoroumSealResults,
   EncryptedShares,
   IMemberShareCount,
   ISortedMemberShareCountArrays,
 } from './interfaces';
-import StaticHelpersKeyPair from 'libs/brightchain/src/lib/staticHelpers.keypair';
-import StaticHelpersSymmetric from 'libs/brightchain/src/lib/staticHelpers.symmetric';
-import QuorumDataRecord from './records/quorumDataRecord';
-import StaticHelpers from 'libs/brightchain/src/lib/staticHelpers';
+import { BrightChainMember, ShortHexGuid, StaticHelpersKeyPair, StaticHelpersSymmetric } from '@digital-defiance/brightchain';
+import { QuorumDataRecord } from './records/quorumDataRecord';
 
 /**
  * @description Static helper functions for Brightchain Quorum. Encryption and other utilities.
@@ -42,7 +39,7 @@ export default abstract class StaticHelpersSealing {
    * @returns the total number of shares
    */
   public static validateShareCountArrayReturnTotalShares(
-    amongstMemberIds: bigint[],
+    amongstMemberIds: ShortHexGuid[],
     shareCountByMemberId?: Array<IMemberShareCount>
   ): number {
     let totalShares = 0;
@@ -75,14 +72,14 @@ export default abstract class StaticHelpersSealing {
    * @returns
    */
   public static determineShareCountsByMemberId(
-    amongstMemberIds: bigint[],
+    amongstMemberIds: ShortHexGuid[],
     shareCountByMemberId?: Array<IMemberShareCount>
-  ): Map<bigint, number> {
+  ): Map<ShortHexGuid, number> {
     StaticHelpersSealing.validateShareCountArrayReturnTotalShares(
       amongstMemberIds,
       shareCountByMemberId
     );
-    const sharesByMemberId: Map<bigint, number> = new Map();
+    const sharesByMemberId: Map<ShortHexGuid, number> = new Map();
     for (let i = 0; i < amongstMemberIds.length; i++) {
       const memberId = amongstMemberIds[i];
       let sharesForMember = 1;
@@ -106,11 +103,11 @@ export default abstract class StaticHelpersSealing {
    * @returns
    */
   public static shareCountsMapToSortedArrays(
-    countMap: Map<bigint, number>
+    countMap: Map<ShortHexGuid, number>
   ): ISortedMemberShareCountArrays {
     const sortedMemberIds = Array.from(countMap.keys()).sort();
     const memberCount = sortedMemberIds.length;
-    const memberIds: bigint[] = [];
+    const memberIds: ShortHexGuid[] = [];
     const shares: number[] = [];
     let totalShares = 0;
     for (let i = 0; i < sortedMemberIds.length; i++) {
@@ -136,7 +133,7 @@ export default abstract class StaticHelpersSealing {
   ): ISortedMemberShareCountArrays {
     const sortedMemberIds = shareCountByMemberId.map((x) => x.memberId).sort();
     const memberCount = sortedMemberIds.length;
-    const memberIds: bigint[] = [];
+    const memberIds: ShortHexGuid[] = [];
     const shares: number[] = [];
     let totalShares = 0;
     for (let i = 0; i < sortedMemberIds.length; i++) {
@@ -160,7 +157,7 @@ export default abstract class StaticHelpersSealing {
    * @returns
    */
   public static shareCountsMapToCountEntries(
-    countMap: Map<bigint, number>
+    countMap: Map<ShortHexGuid, number>
   ): Array<IMemberShareCount> {
     const entries: Array<IMemberShareCount> = [];
     countMap.forEach((shares, memberId) => {
@@ -176,10 +173,10 @@ export default abstract class StaticHelpersSealing {
    * @returns
    */
   public static shareCountsArrayToMap(
-    memberIds: bigint[],
+    memberIds: ShortHexGuid[],
     shares: number[]
-  ): Map<bigint, number> {
-    const countMap: Map<bigint, number> = new Map();
+  ): Map<ShortHexGuid, number> {
+    const countMap: Map<ShortHexGuid, number> = new Map();
     for (let i = 0; i < memberIds.length; i++) {
       const memberId = memberIds[i];
       const shareCount = shares[i];
@@ -198,7 +195,7 @@ export default abstract class StaticHelpersSealing {
   public static quorumSeal<T>(
     agent: BrightChainMember,
     data: T,
-    amongstMemberIds: bigint[],
+    amongstMemberIds: ShortHexGuid[],
     shareCountByMemberId?: Array<IMemberShareCount>,
     sharesRequired?: number
   ): IQoroumSealResults {
@@ -217,7 +214,7 @@ export default abstract class StaticHelpersSealing {
     if (sharesRequired < 2) {
       throw new Error('At least two shares/members are required');
     }
-    const sharesByMemberIdMap: Map<bigint, number> =
+    const sharesByMemberIdMap: Map<ShortHexGuid, number> =
       StaticHelpersSealing.determineShareCountsByMemberId(
         amongstMemberIds,
         shareCountByMemberId
@@ -278,8 +275,8 @@ export default abstract class StaticHelpersSealing {
     shares: Shares,
     members: BrightChainMember[],
     shareCountByMemberId?: Array<IMemberShareCount>
-  ): Map<bigint, EncryptedShares> {
-    const shareCountsByMemberId: Map<bigint, number> =
+  ): Map<ShortHexGuid, EncryptedShares> {
+    const shareCountsByMemberId: Map<ShortHexGuid, number> =
       StaticHelpersSealing.determineShareCountsByMemberId(
         members.map((v) => v.id),
         shareCountByMemberId
@@ -287,8 +284,8 @@ export default abstract class StaticHelpersSealing {
     const sortedMembers = StaticHelpersSealing.shareCountsMapToSortedArrays(
       shareCountsByMemberId
     );
-    const sharesByMemberId = new Map<bigint, Shares>();
-    const encryptedSharesByMemberId = new Map<bigint, EncryptedShares>();
+    const sharesByMemberId = new Map<ShortHexGuid, Shares>();
+    const encryptedSharesByMemberId = new Map<ShortHexGuid, EncryptedShares>();
     let shareIndex = 0;
     for (let i = 0; i < sortedMembers.memberIds.length; i++) {
       const memberId = sortedMembers.memberIds[i];
@@ -314,7 +311,7 @@ export default abstract class StaticHelpersSealing {
           member.dataPublicKey
         );
         encryptedSharesForMember[i] =
-          StaticHelpersSymmetric.ISealResultsToBuffer(
+          StaticHelpersKeyPair.SealResultsToBuffer(
             encryptedKeyShare
           ).toString('hex');
       }
@@ -325,7 +322,7 @@ export default abstract class StaticHelpersSealing {
   }
 
   public static combineEncryptedShares(
-    encryptedShares: Map<bigint, EncryptedShares>
+    encryptedShares: Map<ShortHexGuid, EncryptedShares>
   ): EncryptedShares {
     const combinedShares: EncryptedShares = new Array<string>();
     encryptedShares.forEach((shares) => {
@@ -342,7 +339,7 @@ export default abstract class StaticHelpersSealing {
     members: BrightChainMember[],
     shareCountByMemberId?: Array<IMemberShareCount>
   ): Shares {
-    const shareCountsByMemberId: Map<bigint, number> =
+    const shareCountsByMemberId: Map<ShortHexGuid, number> =
       StaticHelpersSealing.determineShareCountsByMemberId(
         members.map((v) => v.id),
         shareCountByMemberId
@@ -369,7 +366,7 @@ export default abstract class StaticHelpersSealing {
         const encryptedKeyShareHex = encryptedShares[shareIndex++];
         const decryptedPrivateKey =
           StaticHelpersKeyPair.recoverDataKeyFromSigningKey(member);
-        const encryptedKeyShare = StaticHelpersSymmetric.BufferToISealResults(
+        const encryptedKeyShare = StaticHelpersKeyPair.BufferToSealResults(
           Buffer.from(encryptedKeyShareHex, 'hex')
         );
         const decryptedKeyShare = StaticHelpersSymmetric.unseal<string>(
